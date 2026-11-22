@@ -1,5 +1,6 @@
 import {readdir,readFile,writeFile,mkdir,cp} from "node:fs/promises";
 import path from "node:path";
+import {execFileSync} from "node:child_process";
 const files={};
 async function collect(dir){
  for(const item of await readdir(dir,{withFileTypes:true})){
@@ -8,7 +9,9 @@ async function collect(dir){
  if(type)files[key]=[type,(await readFile(p)).toString("base64")];
  }
 }
-await collect("public");await mkdir("dist/server",{recursive:true});await mkdir("dist/.openai",{recursive:true});
+await collect("public");
+const sourceZip=execFileSync("git",["archive","--format=zip","--prefix=go-winks/","HEAD"],{maxBuffer:16*1024*1024});
+files["/go-winks-source.zip"]=["application/zip",sourceZip.toString("base64")];await mkdir("dist/server",{recursive:true});await mkdir("dist/.openai",{recursive:true});
 const catalog=(await readFile("public/catalog.js","utf8")).replaceAll("export const","const"),api=(await readFile("server/api.mjs","utf8")).replace(/^import .*?;\n/,"").replace("export async function api","async function api");
 const worker="const {initialProducts,initialSettings}=(()=>{"+catalog+"\nreturn {initialProducts:products,initialSettings:settings}})();\n"+api+"\nconst assets="+JSON.stringify(files)+`;
 export default {async fetch(req,env){
@@ -18,6 +21,10 @@ export default {async fetch(req,env){
  let name=req.headers.get("oai-authenticated-user-full-name")||"";try{if(req.headers.get("oai-authenticated-user-full-name-encoding")==="percent-encoded-utf-8")name=decodeURIComponent(name)}catch{}
  return api(req,{...env,DB:env.DB,HOSTED:true},id?{id,email,name}:null);
  }
+ if(p==="/go-winks-source.zip"){
+ const email=req.headers.get("oai-authenticated-user-email"),id=req.headers.get("oai-authenticated-user-id");
+ if(!id||!email||!env.HOSTED_ADMIN_EMAIL||email.toLowerCase()!==env.HOSTED_ADMIN_EMAIL.toLowerCase())return new Response("Owner access required",{status:403});
+}
  const a=assets[p==="/"?"/index.html":p];if(!a)return new Response("Not found",{status:404});
  return new Response(req.method==="HEAD"?null:Uint8Array.from(atob(a[1]),c=>c.charCodeAt(0)),{headers:{"content-type":a[0],"x-content-type-options":"nosniff","cache-control":a[0].startsWith("image/")||a[0].startsWith("font/")?"public, max-age=3600":"no-cache"}});
 }};\n`;
