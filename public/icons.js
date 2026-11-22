@@ -1,4 +1,11 @@
 const paths = {
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2.5"/>',
+  more: '<circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/>',
+  play: '<path d="m8 5 11 7-11 7z"/>',
+  pause: '<path d="M9 5v14m6-14v14"/>',
+  order:
+    '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+
   search: '<circle cx="10.5" cy="10.5" r="6.8"/><path d="m16 16 5 5"/>',
   user: '<circle cx="12" cy="8" r="3.5"/><path d="M4.7 21v-2a7.3 7.3 0 0 1 14.6 0v2"/>',
   heart:

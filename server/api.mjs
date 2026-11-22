@@ -587,6 +587,49 @@ export async function api(req, env, u) {
             fail(400, "Check your numeric settings.");
         }
       s.coupon = s.coupon.toUpperCase();
+      if ("heroVideo" in b) {
+        if (b.heroVideo && !safeImage(b.heroVideo))
+          fail(400, "Use an HTTPS video URL or a store media path.");
+        s.heroVideo = clean(b.heroVideo, 1500);
+      }
+      if ("heroLink" in b) {
+        if (
+          !/^\/(?:shop|product|edit|gifting|offers)(?:\/[a-zA-Z0-9_-]+)?$/.test(
+            b.heroLink,
+          )
+        )
+          fail(400, "Choose a valid storefront destination.");
+        s.heroLink = b.heroLink;
+      }
+      if ("edits" in b) {
+        if (
+          !Array.isArray(b.edits) ||
+          b.edits.length > 24 ||
+          new Set(b.edits.map((e) => e.id)).size !== b.edits.length
+        )
+          fail(400, "Each edit needs a unique ID.");
+        const productIds = new Set((await catalog(db)).map((p) => p.id));
+        s.edits = b.edits.map((e) => {
+          if (
+            !goodId(e.id) ||
+            !clean(e.name) ||
+            !safeImage(e.image) ||
+            !Array.isArray(e.items) ||
+            !e.items.length ||
+            e.items.some((id) => !productIds.has(id))
+          )
+            fail(
+              400,
+              "Choose an image, name, and at least one existing product for each edit.",
+            );
+          return {
+            id: e.id,
+            name: clean(e.name, 90),
+            image: clean(e.image, 1500),
+            items: [...new Set(e.items)],
+          };
+        });
+      }
       if ("heroImage" in b) {
         if (!safeImage(b.heroImage))
           fail(400, "Use an HTTPS or store image URL.");

@@ -23,7 +23,7 @@ export async function manage(ctx) {
     main.innerHTML = `<section class="inside">${crumbs("Store management")}${intro("STORE TEAM", "Store management", u ? "This account does not have a store team role. Share your account ID with the store administrator to request access." : "Sign in with a store team account to manage Go Winks.")}${u ? '<a class="btn" href="#/account">View my profile</a>' : '<button class="btn" data-act="login">Sign in</button>'}</section>`;
     return;
   }
-  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "storefront", "collections", "campaigns", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
+  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "storefront", "collections", "edits", "campaigns", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
   main
     .querySelectorAll("[data-tab]")
     .forEach((e) => (e.onclick = () => setTab(e.dataset.tab)));
@@ -101,7 +101,7 @@ export async function manage(ctx) {
   }
   if (tab === "storefront") {
     area.innerHTML = form(
-      `<h3>Homepage</h3>${field("announcement", "Announcement bar", s.announcement)}<div class="form-grid">${field("eyebrow", "Campaign label", s.eyebrow)}${field("heroImage", "Hero image URL", s.heroImage, "required")}${field("headline", "Headline", s.headline)}${field("italic", "Italic headline", s.italic)}${textarea("subtitle", "Campaign description", s.subtitle)}${field("cta", "Shop button", s.cta)}</div><h3>Shipping & offers</h3><div class="form-grid">${field("shippingThreshold", "Free shipping threshold (₹)", s.shippingThreshold, "type=number min=0 required")}${field("shippingFee", "Standard shipping fee (₹)", s.shippingFee, "type=number min=0 required")}${field("coupon", "Offer code", s.coupon)}${field("discount", "Discount (%)", s.discount, "type=number min=0 max=90 required")}</div><h3>Shiprocket parcel defaults</h3><div class="form-grid">${[
+      `<h3>Homepage film</h3>${field("heroVideo", "Campaign video URL", s.heroVideo)}${field("heroImage", "Video poster or still image", s.heroImage, "required")}${field("heroLink", "Campaign destination", s.heroLink, "required")}${field("announcement", "Shipping announcement", s.announcement)}<h3>Shipping & offers</h3><div class="form-grid">${field("shippingThreshold", "Free shipping threshold (₹)", s.shippingThreshold, "type=number min=0 required")}${field("shippingFee", "Standard shipping fee (₹)", s.shippingFee, "type=number min=0 required")}${field("coupon", "Offer code", s.coupon)}${field("discount", "Discount (%)", s.discount, "type=number min=0 max=90 required")}</div><h3>Shiprocket parcel defaults</h3><div class="form-grid">${[
         ["length", "Length (cm)", 20],
         ["breadth", "Breadth (cm)", 15],
         ["height", "Height (cm)", 8],
@@ -122,12 +122,60 @@ export async function manage(ctx) {
     submit(area, (v) => api("/api/manage/settings", v));
     return;
   }
+  if (tab === "edits") {
+    const edits = s.edits || [];
+    area.innerHTML =
+      '<div class="between"><h3>Shoppable edits</h3><button class="btn" id="add-edit">Add edit</button></div>' +
+      edits
+        .map(
+          (v, i) =>
+            `<div class="admin-item"><img src="${esc(v.image)}" alt=""><strong>${esc(v.name)}</strong><button class="text-link" data-edit="${i}">Edit</button></div>`,
+        )
+        .join("");
+    const editor = (i) => {
+      const old = edits[i] || { id: "", name: "", image: "", items: [] };
+      open(
+        i < 0 ? "New shoppable edit" : "Edit collection",
+        form(
+          field(
+            "id",
+            "Edit ID",
+            old.id,
+            old.id ? "readonly" : "required pattern=[a-z0-9_-]+",
+          ) +
+            field("name", "Title", old.name, "required") +
+            field("image", "Image URL", old.image, "required") +
+            `<fieldset><legend>Products</legend>${data.products.map((p) => `<label class="check-row"><input name="products" type="checkbox" value="${esc(p.id)}" ${old.items.includes(p.id) ? "checked" : ""}>${esc(p.name)}</label>`).join("")}</fieldset>`,
+        ),
+      );
+      submit(document.querySelector("#dialog"), (v) => {
+        const updated = edits.slice();
+        const items = [
+          ...document.querySelectorAll(
+            '#dialog input[name="products"]:checked',
+          ),
+        ].map((el) => el.value);
+        updated[i < 0 ? edits.length : i] = {
+          id: v.id,
+          name: v.name,
+          image: v.image,
+          items,
+        };
+        return api("/api/manage/settings", { edits: updated });
+      });
+    };
+    area.querySelector("#add-edit").onclick = () => editor(-1);
+    area
+      .querySelectorAll("[data-edit]")
+      .forEach((el) => (el.onclick = () => editor(Number(el.dataset.edit))));
+    return;
+  }
   if (tab === "collections" || tab === "campaigns") {
     const isCat = tab === "collections",
       list = isCat ? cats : s.heroSlides,
       k = isCat ? "categories" : "heroSlides";
     area.innerHTML =
-      `<div class="between"><h3>${isCat ? "Shop collections" : "Additional hero slides"}</h3><button class="btn" id="add-item">Add ${isCat ? "collection" : "slide"}</button></div>` +
+      `<div class="between"><h3>${isCat ? "Shop collections" : "Campaign carousel slides"}</h3><button class="btn" id="add-item">Add ${isCat ? "collection" : "slide"}</button></div>` +
       list
         .map(
           (c, i) =>

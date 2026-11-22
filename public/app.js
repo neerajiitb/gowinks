@@ -31,7 +31,6 @@ let state = {
   guestWishlist = read("wishlist", []),
   coupon = read("coupon", ""),
   giftNote = read("note", ""),
-  slide = 0,
   quantity = 1,
   accountTab = "profile",
   filters = { sort: "featured", range: "all", stock: false },
@@ -75,38 +74,71 @@ function toast(msg) {
 }
 const link = (route, text, cls = "") =>
   `<a class="${cls}" href="#${esc(route)}">${text}</a>`;
-const brand = () => link("/", "Go <i>Winks</i><sup>✦</sup>", "brand");
+const brand = () =>
+  link(
+    "/",
+    '<img class="gw-sigil" src="/monogram.svg" alt=""><span>GO WINKS</span>',
+    "gw-brand",
+  );
 const hash = () => location.hash.slice(1) || "/",
   goto = (r) => {
     close();
     if (hash() === r) render();
     else location.hash = r;
   };
-const iconBtn = (action, name, key, cls = "", extra = "") =>
-  `<button class="icon ${cls}" aria-label="${esc(name)}" title="${esc(name)}" data-act="${action}">${icon(key)}${extra}</button>`;
+const toolButton = (act, label, glyph, extra = "") =>
+  `<button type="button" class="shop-tool" data-act="${act}" aria-label="${esc(label)}"><span class="tool-icon">${icon(glyph)}${extra}</span><span>${esc(label)}</span></button>`;
+const editList = () => state.settings.edits || [];
+const groupLinks = (c) =>
+  state.products
+    .filter((p) => p.category === c.id)
+    .slice(0, 5)
+    .map((p) => link("/product/" + p.id, esc(p.name)))
+    .join("");
 function header() {
-  const s = state.settings,
-    n = bagCount();
-  $("#announcement").textContent = s.announcement;
+  const n = bagCount(),
+    badge = n ? '<span class="cart-dot">' + n + "</span>" : "";
+
+  const menu = (label, route, items, img) =>
+    `<div class="nav-group">${link(route, esc(label), "nav-parent")}<div class="nav-panel"><div><strong>${esc(label)}</strong>${items}${link(route, "Shop all", "panel-all")}</div><img src="${esc(img)}" alt=""></div></div>`;
   $("#header").innerHTML =
-    `<div class="mast"><button class="search-link" data-act="search">${icon("search")}<span>Search Go Winks</span></button><div class="mobile-tools">${iconBtn("menu", "Open menu", "menu")}${iconBtn("search", "Search products", "search")}</div>${brand()}<div class="actions">${iconBtn("account", "My account", "user", "user-btn")}${iconBtn("wishlist", "Wishlist", "heart")}${iconBtn("bag", "Shopping bag, " + n + " items", "bag", "", n ? '<span class="count">' + n + "</span>" : "")}</div></div>
- <nav aria-label="Shop navigation" class="nav">${link("/shop", "Shop All " + icon("down"))}${cats()
-   .map((c) =>
-     link("/shop/" + c.id, esc(c.name), hash() === "/shop/" + c.id ? "on" : ""),
-   )
-   .join(
-     "",
-   )}${link("/gifting", icon("gift") + " Gifting Guide", "nav-gift")}</nav>`;
+    `<div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
+ <nav class="shop-nav" aria-label="Shop categories"><div class="nav-in"><a class="nav-monogram" href="#/" aria-label="Go Winks home"><img src="/monogram.svg" alt=""></a>${menu(
+   "All Products",
+   "/shop",
+   cats()
+     .map((c) => link("/shop/" + c.id, esc(c.name)))
+     .join(""),
+   state.settings.heroImage,
+ )}${cats()
+   .map((c) => menu(c.name, "/shop/" + c.id, groupLinks(c), c.image))
+   .join("")}<div class="nav-right">${menu(
+   "Gifts",
+   "/gifting",
+   editList()
+     .map((e) => link("/edit/" + e.id, esc(e.name)))
+     .join(""),
+   editList()[1]?.image || state.settings.heroImage,
+ )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>`;
+  let dock = $("#mobile-dock");
+  if (!dock) {
+    dock = document.createElement("nav");
+    dock.id = "mobile-dock";
+    dock.setAttribute("aria-label", "Mobile shop navigation");
+    document.body.append(dock);
+  }
+  dock.innerHTML = `<button class="dock-emblem" data-act="dock" aria-label="Open shopping menu"><img src="/monogram.svg" alt=""></button><div class="dock-tools">${toolButton("menu", "More", "menu")}${toolButton("search", "Search", "search")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}</div>`;
+  updateChrome();
 }
 function footer() {
-  const s = state.settings;
   $("#footer").innerHTML =
-    `<div class="footer"><div>${brand()}<p>${esc(s.story)}</p></div><div><h4>The boutique</h4>${link("/shop", "Shop all")}${cats()
+    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
       .map((c) => link("/shop/" + c.id, esc(c.name)))
       .join(
         "",
-      )}</div><div><h4>Customer care</h4>${link("/info/shipping", "Shipping & delivery")}${link("/info/returns", "Returns & exchanges")}${link("/info/contact", "Contact us")}<button data-act="account">My account</button></div><div><h4>Go Winks</h4>${link("/info/story", "Our story")}${link("/gifting", "Gifting guide")}${link("/offers", "Offers")}${link("/manage", "Store management")}</div><div class="footnote">© Go Winks · India · INR</div></div>`;
+      )}</div></div><div class="retail-credit">${brand()}<span>© Go Winks · India · INR</span></div>`;
 }
+
 function open(title, body) {
   const d = $("#dialog");
   $("#dialog-title").textContent = title;
@@ -125,90 +157,233 @@ $("#dialog").addEventListener("click", (e) => {
   )
     close();
 });
-const over = (t) => `<div class="overline">${icon("spark")}${esc(t)}</div>`;
+
 function hero() {
-  const s = state.settings,
-    slides = [{ ...s, image: s.heroImage, category: "" }, ...s.heroSlides],
-    h = slides[slide] || slides[0];
-  return `<section class="hero ${slide ? "alt" : ""}" aria-label="Featured collection"><img class="hero-photo" src="${esc(h.image)}" alt="${slide ? esc(h.eyebrow) : "Go Winks truffle box, candlelight and blush silk"}" fetchpriority="high"><div class="hero-in"><div class="overline">${esc(h.eyebrow)}</div><h1>${esc(h.headline)}<em>${esc(h.italic)}</em></h1><p>${esc(h.subtitle)}</p>${link("/shop" + (h.category ? "/" + h.category : ""), esc(h.cta), "btn light")}</div><div class="carousel" aria-label="Campaign slides">${slides.map((x, i) => `<button class="${i === slide ? "active" : ""}" data-slide="${i}" aria-label="Show ${esc(x.eyebrow)}" aria-pressed="${i === slide}"></button>`).join("")}</div></section>`;
+  const s = state.settings;
+  return `<section class="film" aria-label="Go Winks romantic gift collection"><h1 class="visually-hidden">Go Winks couples’ wellness boutique</h1><a href="#${esc(s.heroLink || "/gifting")}" aria-label="Shop the romantic gift collection">${s.heroVideo ? `<video playsinline loop muted preload="auto" poster="${esc(s.heroImage)}" aria-label="Go Winks chocolates and gifts on red satin"><source src="${esc(s.heroVideo)}" type="video/mp4"></video>` : `<img src="${esc(s.heroImage)}" alt="Go Winks gift collection">`}</a>${s.heroVideo ? `<button class="film-control" data-act="film" aria-label="Pause campaign film">${icon("pause")}</button>` : ""}</section>`;
 }
-const perks = () =>
-  `<div class="perks">${[
-    ["box", "Discreet Packaging"],
-    ["gift", "Gift-ready Details"],
-    ["leaf", "Thoughtfully Curated"],
-    ["lock", "Secure Checkout"],
-  ]
-    .map(([i, s]) => `<div class="perk">${icon(i)}<span>${s}</span></div>`)
-    .join("")}</div>`;
 const head = (sub, title, route, label) =>
-  `<div class="section-head"><div>${over(sub)}<h2>${title}</h2></div>${route ? link(route, label, "text-link") : ""}</div>`;
-const catCard = (c) =>
-  `<a class="category" href="#/shop/${esc(c.id)}"><img loading="lazy" src="${esc(c.image)}" alt=""><div class="cat-foot"><h3>${esc(c.name)}</h3>${icon("right")}</div></a>`;
+  `<div class="section-head"><h2>${title}</h2>${route ? link(route, label, "text-link") : ""}</div>`;
+const tile = (route, name, image) =>
+  `<a class="retail-tile" href="#${esc(route)}"><img loading="lazy" src="${esc(image)}" alt=""><span>${esc(name)}</span></a>`;
+const catCard = (c) => tile("/shop/" + c.id, c.name, c.image);
 const card = (p) =>
-  `<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"></a>${p.tag ? '<span class="tag">' + esc(p.tag) + "</span>" : ""}<button class="heart-btn ${wishlist().includes(p.id) ? "selected" : ""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button><div class="minor">${esc(category(p.category)?.name)}</div><h3>${link("/product/" + p.id, esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
+  `<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"><span class="card-view">VIEW DETAILS</span></a><button class="heart-btn ${wishlist().includes(p.id) ? "selected" : ""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button><h3>${link("/product/" + p.id, esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
 const crumbs = (label) =>
   `<div class="crumb">${link("/", "Home")} &nbsp;/&nbsp; ${esc(label)}</div>`;
 const intro = (sub, t, p = "") =>
-  `<div class="intro">${over(sub)}<h1>${esc(t)}</h1>${p ? "<p>" + esc(p) + "</p>" : ""}</div>`;
+  `<div class="intro"><h1>${esc(t)}</h1>${p ? "<p>" + esc(p) + "</p>" : ""}</div>`;
 const empty = (t, p) =>
   `<div class="empty"><h3>${esc(t)}</h3><p>${esc(p)}</p>${link("/shop", "Explore the boutique", "btn")}</div>`;
-function home() {
-  return (
-    hero() +
-    perks() +
-    `<section class="section">${head("THE BOUTIQUE", "Shop by <em>Category</em>", "/shop", "View all categories")}<div class="category-grid">${cats().map(catCard).join("")}</div></section><section class="section products-home">${head("THE SIGNATURE SELECTION", "The <em>Favourites</em>", "/shop", "Shop all products")}<div class="product-grid">${state.products.slice(0, 4).map(card).join("")}</div></section>`
+let recFilter = "",
+  recStock = false,
+  recSort = "featured",
+  campaignIndex = 0,
+  deckTimer = 0,
+  filmPaused = false;
+function recommendations() {
+  let list = state.products.filter(
+    (p) =>
+      (!recFilter || p.category === recFilter) &&
+      (!recStock || p.available > 0),
   );
-}
-function shop(route) {
-  const id = route[2],
-    c = category(id),
-    q = new URLSearchParams(hash().split("?")[1]).get("q") || "",
-    list = state.products.filter(
-      (p) =>
-        (!c || p.category === id) &&
-        (!q ||
-          (p.name + " " + p.detail + " " + category(p.category)?.name)
-            .toLowerCase()
-            .includes(q.toLowerCase())) &&
-        (!filters.stock || p.available > 0) &&
-        (filters.range === "all" ||
-          (filters.range === "under" ? p.price < 1500 : p.price >= 1500)),
-    );
-  if (filters.sort === "low") list.sort((a, b) => a.price - b.price);
-  if (filters.sort === "high") list.sort((a, b) => b.price - a.price);
-  if (filters.sort === "name")
-    list.sort((a, b) => a.name.localeCompare(b.name));
-  return `<div class="inside">${crumbs(c?.name || "Shop all")}${intro("THE BOUTIQUE", q ? "Results for “" + q + "”" : c?.name || "Shop all", c?.detail || "Chocolates, gifts and sensorial rituals for two.")}<div class="filter-bar"><select aria-label="Collection" id="collection-filter"><option value="">All collections</option>${cats()
+  if (recSort === "low") list.sort((a, b) => a.price - b.price);
+  if (recSort === "high") list.sort((a, b) => b.price - a.price);
+  return `<h2>Recommended for you</h2><div class="rec-tools"><button class="rec-filter" data-act="rec-filter" aria-label="Filter recommended products">${icon("filter")}</button><div class="rec-scroll"><button class="${recFilter ? "" : "chosen"}" data-rec="">All</button>${cats()
     .map(
-      (x) =>
-        `<option value="${esc(x.id)}" ${x.id === id ? "selected" : ""}>${esc(x.name)}</option>`,
-    )
-    .join("")}</select><select id="price-filter" aria-label="Price range">${[
-    ["all", "All prices"],
-    ["under", "Under ₹1,500"],
-    ["over", "₹1,500 & above"],
-  ]
-    .map(
-      ([v, l]) =>
-        `<option value="${v}" ${v === filters.range ? "selected" : ""}>${l}</option>`,
-    )
-    .join("")}</select><select id="sort" aria-label="Sort products">${[
-    ["featured", "Featured"],
-    ["low", "Price: low to high"],
-    ["high", "Price: high to low"],
-    ["name", "Name: A to Z"],
-  ]
-    .map(
-      ([v, l]) =>
-        `<option value="${v}" ${filters.sort === v ? "selected" : ""}>${l}</option>`,
+      (c) =>
+        `<button data-rec="${esc(c.id)}" class="${c.id === recFilter ? "chosen" : ""}"><img src="${esc(c.image)}" alt="">${esc(c.short || c.name)}</button>`,
     )
     .join(
       "",
-    )}</select><label><input type="checkbox" style="width:auto" id="stock-filter" ${filters.stock ? "checked" : ""}> In stock</label><span class="count-text">${list.length} products</span></div>${list.length ? '<div class="product-grid">' + list.map(card).join("") + "</div>" : empty("No matching products", "Try a different collection, search term or price range.")}</div>`;
+    )}</div></div><div class="product-grid">${list.map(card).join("") || "<p>No matching products.</p>"}</div>`;
+}
+function home() {
+  const s = state.settings,
+    edits = editList(),
+    tiles = [
+      ...cats().map(catCard),
+      ...edits.map((e) => tile("/edit/" + e.id, e.name, e.image)),
+    ];
+  const picks = edits.length
+    ? edits.map((e) => ({ r: "/edit/" + e.id, n: e.name, i: e.image }))
+    : cats().map((c) => ({ r: "/shop/" + c.id, n: c.name, i: c.image }));
+  return (
+    hero() +
+    `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
+ ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
+ <section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
+   .slice(0, 4)
+   .map((v) => tile(v.r, v.n, v.i))
+   .join(
+     "",
+   )}</div><div class="marquee" aria-label="More collections"><div class="marquee-track">${[0, 1].map((_, i) => `<div class="marquee-group" ${i ? 'aria-hidden="true" inert' : ""}>${picks.map((v) => tile(v.r, v.n, v.i)).join("")}</div>`).join("")}</div></div></section><section class="recommend" id="recommend">${recommendations()}</section>`
+  );
+}
+function setCampaign(index) {
+  const rail = $(".campaign-track");
+  if (!rail || !rail.children.length) return;
+  campaignIndex = (index + rail.children.length) % rail.children.length;
+  rail.style.transform = "translateX(-" + 100 * campaignIndex + "%)";
+  [...rail.children].forEach((el, i) => (el.inert = i !== campaignIndex));
+}
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+function syncFilm() {
+  const film = $(".film video"),
+    control = $(".film-control");
+  if (!film || !control) return;
+  const play = !filmPaused && !reduced.matches && !document.hidden;
+  if (play)
+    film.play().catch(() => {
+      if (film.isConnected) {
+        control.innerHTML = icon("play");
+        control.setAttribute("aria-label", "Play campaign film");
+      }
+    });
+  else film.pause();
+  control.innerHTML = icon(play ? "pause" : "play");
+  control.setAttribute(
+    "aria-label",
+    play ? "Pause campaign film" : "Play campaign film",
+  );
+}
+function syncHome() {
+  clearInterval(deckTimer);
+  const film = $(".film video");
+  if (film) syncFilm();
+  if ($(".campaign-track")) {
+    setCampaign(campaignIndex);
+    if (!reduced.matches)
+      deckTimer = setInterval(() => {
+        if (
+          !document.hidden &&
+          !$("#dialog").open &&
+          !$(".campaign-rail")?.matches(":hover,:focus-within")
+        )
+          setCampaign(campaignIndex + 1);
+      }, 3500);
+  }
+  updateChrome();
+}
+let lastY = 0,
+  scrollFrame = 0;
+function updateChrome() {
+  const head = $("#header"),
+    dock = $("#mobile-dock");
+  if (!head) return;
+  const y = window.scrollY;
+  head.classList.toggle("scrolled", y > 68);
+  head.classList.toggle("reveal", y > 68 && y < lastY);
+  lastY = y;
+  if (!dock) return;
+  const hand = $("#picked"),
+    rec = $("#recommend");
+  let mode =
+    hand && hand.getBoundingClientRect().top <= innerHeight
+      ? "compact"
+      : "expanded";
+  if (rec && rec.getBoundingClientRect().top <= innerHeight) mode = "bar";
+  if (
+    mode === "compact" &&
+    dock.dataset.mode === "expanded" &&
+    window.innerWidth < 970 &&
+    !reduced.matches &&
+    typeof Element.prototype.animate === "function"
+  ) {
+    const origin = head.querySelector(".gw-sigil").getBoundingClientRect(),
+      size = 52;
+    const logo = document.createElement("img");
+    logo.src = "/monogram.svg";
+    logo.alt = "";
+    logo.className = "flying-sigil";
+    document.body.append(logo);
+    const startX = origin.left,
+      startY = Math.max(-size, origin.top),
+      endX = innerWidth - 44 - size / 2,
+      endY = innerHeight - 44 - size / 2;
+    const flight = logo.animate(
+      [
+        {
+          transform: `translate(${startX}px,${startY}px) scale(.65)`,
+          opacity: 0.85,
+        },
+        {
+          transform: `translate(${startX + (endX - startX) * 0.75}px,${startY + (endY - startY) * 0.42}px) scale(1.05)`,
+          opacity: 1,
+          offset: 0.55,
+        },
+        { transform: `translate(${endX}px,${endY}px) scale(1)`, opacity: 1 },
+      ],
+      { duration: 1400, easing: "cubic-bezier(.06,.82,.14,1)" },
+    );
+    flight.finished.catch(() => {}).finally(() => logo.remove());
+  }
+  dock.dataset.mode = mode;
+  if (mode !== "compact") dock.classList.remove("opened");
+}
+window.addEventListener(
+  "scroll",
+  () => {
+    if (!scrollFrame)
+      scrollFrame = requestAnimationFrame(() => {
+        updateChrome();
+        scrollFrame = 0;
+      });
+  },
+  { passive: true },
+);
+reduced.addEventListener("change", syncHome);
+document.addEventListener("visibilitychange", syncFilm);
+
+function shop(route) {
+  const c = category(route[2]),
+    query = new URLSearchParams(hash().split("?")[1]).get("q") || "";
+  const source = state.products.filter(
+    (p) =>
+      (!c || p.category === c.id) &&
+      (!query ||
+        (p.name + " " + p.detail + " " + category(p.category)?.name)
+          .toLowerCase()
+          .includes(query.toLowerCase())),
+  );
+  const matches = source.filter(
+    (p) =>
+      (!filters.stock || p.available > 0) &&
+      (filters.range === "all" ||
+        (filters.range === "under" ? p.price < 1500 : p.price >= 1500)),
+  );
+  if (filters.sort === "low") matches.sort((a, b) => a.price - b.price);
+  if (filters.sort === "high") matches.sort((a, b) => b.price - a.price);
+  if (filters.sort === "name")
+    matches.sort((a, b) => a.name.localeCompare(b.name));
+  const title = query
+    ? "Results for “" + query + "”"
+    : c?.name || "All products";
+  const options = (key, text) =>
+    `<option value="${key}" ${filters.sort === key ? "selected" : ""}>${text}</option>`;
+  const ranges = [
+    ["all", "All prices", source.length],
+    ["under", "Below ₹1,500", source.filter((p) => p.price < 1500).length],
+    ["over", "₹1,500 and above", source.filter((p) => p.price >= 1500).length],
+  ];
+  return `<section class="plp">${crumbs(c?.name || "All products")}<a class="plp-banner" href="#/gifting"><img src="${esc(state.settings.heroImage)}" alt=""><span>The Romantic Gift Edit</span><b>SHOP NOW</b></a><div class="plp-title"><h1>${esc(title)}</h1><span>${matches.length} products</span></div><div class="plp-tools"><button data-plp-stock="all" class="${!filters.stock ? "active" : ""}">ALL</button><button data-plp-stock="in" class="${filters.stock ? "active" : ""}">IN STOCK</button><button data-act="listing-filters" class="plp-mobile-filter">${icon("filter")} FILTERS</button><select aria-label="Sort by" id="sort">${options("featured", "POPULAR")}${options("low", "PRICE: LOW TO HIGH")}${options("high", "PRICE: HIGH TO LOW")}${options("name", "NAME: A TO Z")}</select></div><div class="filter-chips"><span>FILTERED BY</span>${c ? link("/shop", esc(c.name) + " &nbsp; ×") : "<b>All products</b>"}${filters.range !== "all" ? '<button data-plp-range="all">' + (filters.range === "under" ? "Below ₹1,500" : "₹1,500 and above") + " &nbsp; ×</button>" : ""}${filters.stock ? '<button data-plp-stock="all">In stock &nbsp; ×</button>' : ""}</div><div class="plp-body"><aside class="plp-side"><h2>FILTERS</h2><section><h3>Price</h3>${ranges.map(([k, l, n]) => `<button class="filter-check ${filters.range === k ? "checked" : ""}" data-plp-range="${k}">${esc(l)} (${n})</button>`).join("")}</section><section><h3>Category</h3>${cats()
+    .map((cat) =>
+      link(
+        "/shop/" + cat.id,
+        esc(cat.name) +
+          " (" +
+          state.products.filter((p) => p.category === cat.id).length +
+          ")",
+        "filter-check " + (cat.id === c?.id ? "checked" : ""),
+      ),
+    )
+    .join(
+      "",
+    )}</section></aside><div class="plp-products">${matches.map(card).join("") || empty("No matching products", "Try another collection or price range.")}</div></div></section>`;
 }
 const stepper = (id, n) =>
   `<div class="quantity"><button data-step="-1" data-id="${esc(id)}" aria-label="Decrease quantity">−</button><b>${n}</b><button data-step="1" data-id="${esc(id)}" aria-label="Increase quantity">+</button></div>`;
+let galleryIndex = 0;
 function detail(id) {
   const p = product(id);
   if (!p)
@@ -217,8 +392,26 @@ function detail(id) {
       empty("Product unavailable", "Explore the rest of the collection.") +
       "</div>"
     );
-  return `<div class="inside">${crumbs(category(p.category)?.name || "Product")}<div class="detail-layout"><img src="${esc(p.image)}" alt="${esc(p.name)}"><div class="details">${over(category(p.category)?.name || "")}<h1>${esc(p.name)}</h1><div class="detail-price">${fmt(p.price)}</div><small>Inclusive of applicable taxes</small><p class="copy">${esc(p.detail)}</p><p class="stock">${p.available ? "In stock" : "Sold out"}</p><div class="action-row">${stepper("detail", quantity)}<button class="btn" data-add="${esc(id)}" ${p.available ? "" : "disabled"}>Add to bag</button><button class="btn ghost ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-label="Save to wishlist">${icon("heart")}</button></div><details open><summary>Product details</summary><p>${esc(p.spec)}</p></details><details><summary>Delivery & packaging</summary><p>${esc(state.settings.shipping)}</p></details><details><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details></div></div><section class="cross-section">${head("COMPLETE THE EVENING", "You may also <em>love</em>")}<div class="product-grid">${state.products
-    .filter((x) => x.id !== id)
+  const c = category(p.category),
+    context = editList().find((e) => e.items.includes(id)),
+    gallery = [
+      { src: p.image, label: "Product image" },
+      { src: p.image, label: "Close-up", zoom: true },
+      ...(context
+        ? [{ src: context.image, label: context.name + " collection" }]
+        : []),
+    ],
+    g = gallery[galleryIndex] || gallery[0];
+  return `<div class="pdp">${crumbs((c?.name || "Products") + " / " + p.name)}<div class="pdp-body"><div class="pdp-gallery"><div class="pd-main ${g.zoom ? "zoomed" : ""}"><img src="${esc(g.src)}" alt="${esc(p.name + " · " + g.label)}"><button class="heart-btn ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button></div><div class="thumbs">${gallery.map((v, i) => `<button data-gallery="${i}" class="${i === galleryIndex ? "chosen" : ""} ${v.zoom ? "zoomed" : ""}" aria-label="${esc(v.label)}" aria-pressed="${i === galleryIndex}"><img src="${esc(v.src)}" alt=""></button>`).join("")}</div></div><div class="pdp-info"><h1>${esc(p.name)}</h1><p>From ${link("/shop/" + p.category, esc(c?.name || "Go Winks"))}</p><div class="pd-prices"><div><strong>${fmt(p.price)}</strong><small>MRP inclusive of all taxes</small></div><div><b>${p.available ? "In stock" : "Sold out"}</b><small>${esc(c?.short || "Go Winks")}</small></div></div><div class="delivery-panel"><b>${icon("truck")} Delivery information</b><p>${esc(state.settings.announcement)}</p><details><summary>Shipping & packaging</summary><p>${esc(state.settings.shipping)}</p></details></div><p class="pd-description">${esc(p.detail)}</p><details class="pd-spec"><summary>Product details</summary><p>${esc(p.spec)}</p></details><details class="pd-spec"><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details><div class="pd-quantity"><span>Quantity</span>${stepper("detail", quantity)}</div><div class="pd-buy"><button data-buy="${esc(id)}" ${p.available ? "" : "disabled"}>BUY NOW</button><button data-add="${esc(id)}" ${p.available ? "" : "disabled"}>ADD TO BAG</button></div><div class="pd-service">${[
+    ["box", "Discreet packaging"],
+    ["gift", "Gift notes"],
+    ["lock", "Secure checkout"],
+  ]
+    .map(([i, n]) => `<div>${icon(i)}${n}</div>`)
+    .join(
+      "",
+    )}</div></div></div><section class="pd-related">${head("", "You may also like")}<div class="product-grid">${state.products
+    .filter((v) => v.id !== id)
     .slice(0, 4)
     .map(card)
     .join("")}</div></section></div>`;
@@ -460,8 +653,24 @@ function render() {
   header();
   if (!page) main.innerHTML = home();
   else if (page === "shop") main.innerHTML = shop(route);
-  else if (page === "product") main.innerHTML = detail(route[2]);
-  else if (page === "wishlist") {
+  else if (page === "edit") {
+    const e = editList().find((e) => e.id === route[2]);
+    main.innerHTML = e
+      ? `<div class="inside">${crumbs(e.name)}${intro("", e.name)}<div class="product-grid">${e.items.map(product).filter(Boolean).map(card).join("")}</div></div>`
+      : '<div class="inside">' +
+        empty("Collection unavailable", "Discover the rest of the boutique.") +
+        "</div>";
+  } else if (page === "product") {
+    main.innerHTML = detail(route[2]);
+    if (product(route[2]))
+      save(
+        "recent",
+        [route[2], ...read("recent", []).filter((id) => id !== route[2])].slice(
+          0,
+          16,
+        ),
+      );
+  } else if (page === "wishlist") {
     const saved = state.products.filter((p) => wishlist().includes(p.id));
     main.innerHTML = `<div class="inside">${crumbs("Wishlist")}${intro("SAVED FOR LATER", "Your wishlist")}${saved.length ? '<div class="product-grid">' + saved.map(card).join("") + "</div>" : empty("No saved favourites yet", "Tap the heart on a product to keep it here.")}</div>`;
   } else if (page === "account" || page === "checkout") {
@@ -525,6 +734,7 @@ function render() {
       '<div class="inside">' +
       empty("Page not found", "Browse the boutique to continue.") +
       "</div>";
+  syncHome();
   document.title =
     (page === "product"
       ? product(route[2])?.name
@@ -540,6 +750,7 @@ function render() {
 window.addEventListener("hashchange", () => {
   close();
   quantity = 1;
+  galleryIndex = 0;
   render();
   scrollTo(0, 0);
 });
@@ -550,9 +761,41 @@ document.addEventListener("click", async (e) => {
     if (el.getAttribute("href") === "#" + hash()) close();
     return;
   }
-  if (el.hasAttribute("data-slide")) {
-    slide = Number(el.dataset.slide);
-    $(".hero").outerHTML = hero();
+  if (el.hasAttribute("data-gallery")) {
+    galleryIndex = Number(el.dataset.gallery);
+    render();
+    return;
+  }
+  if (el.hasAttribute("data-plp-range")) {
+    filters.range = el.dataset.plpRange;
+    close();
+    render();
+    return;
+  }
+  if (el.hasAttribute("data-plp-stock")) {
+    filters.stock = el.dataset.plpStock === "in";
+    render();
+    return;
+  }
+  if (el.dataset.buy) {
+    const p = product(el.dataset.buy);
+    if (!p || !p.available) return;
+    const q = (bag[p.id] || 0) + quantity;
+    if (q > Math.min(p.available, 10)) {
+      toast("Maximum available quantity reached.");
+      return;
+    }
+    changeBag(p.id, q);
+    checkout();
+    return;
+  }
+  if (el.hasAttribute("data-deck")) {
+    setCampaign(campaignIndex + Number(el.dataset.deck));
+    return;
+  }
+  if (el.hasAttribute("data-rec")) {
+    recFilter = el.dataset.rec;
+    $("#recommend").innerHTML = recommendations();
     return;
   }
   if (el.dataset.heart) {
@@ -597,6 +840,79 @@ document.addEventListener("click", async (e) => {
     return;
   }
   switch (el.dataset.act) {
+    case "listing-filters":
+      open(
+        "Filters",
+        document
+          .querySelector(".plp-side")
+          .innerHTML.replace("<h2>FILTERS</h2>", ""),
+      );
+      return;
+    case "film": {
+      const v = $(".film video");
+      if (!v) return;
+      filmPaused = !v.paused;
+      if (v.paused) {
+        v.play()
+          .then(() => {
+            el.innerHTML = icon("pause");
+            el.setAttribute("aria-label", "Pause campaign film");
+          })
+          .catch(() => toast("The film could not play."));
+      } else {
+        v.pause();
+        el.innerHTML = icon("play");
+        el.setAttribute("aria-label", "Play campaign film");
+      }
+      return;
+    }
+    case "dock":
+      $("#mobile-dock").classList.toggle("opened");
+      return;
+    case "rec-filter":
+      open(
+        "Filter products",
+        `<form class="stack" id="rec-form"><label>Sort by<select name="sort"><option value="featured">Featured</option><option value="low" ${recSort === "low" ? "selected" : ""}>Price: low to high</option><option value="high" ${recSort === "high" ? "selected" : ""}>Price: high to low</option></select></label><label class="check-row"><input type="checkbox" name="stock" ${recStock ? "checked" : ""}>In stock only</label><button class="btn">Apply filters</button></form>`,
+      );
+      return;
+    case "recent": {
+      const items = read("recent", []).map(product).filter(Boolean);
+      open(
+        "Recently viewed",
+        items.length
+          ? items
+              .map((p) =>
+                link(
+                  "/product/" + p.id,
+                  '<img src="' +
+                    esc(p.image) +
+                    '" alt=""><div>' +
+                    esc(p.name) +
+                    '<div class="price">' +
+                    fmt(p.price) +
+                    "</div></div>",
+                  "search-result",
+                ),
+              )
+              .join("")
+          : empty(
+              "No recently viewed products",
+              "The products you open will appear here.",
+            ),
+      );
+      return;
+    }
+    case "gift":
+      goto("/gifting");
+      return;
+    case "orders":
+      accountTab = "orders";
+      if (state.user) goto("/account");
+      else {
+        returnAfterAuth = "/account";
+        auth();
+      }
+      return;
     case "menu":
       open(
         "Explore Go Winks",
@@ -651,6 +967,11 @@ document.addEventListener("click", async (e) => {
   }
 });
 document.addEventListener("input", (e) => {
+  if (e.target.id === "mast-query") {
+    const box = $("#mast-results");
+    box.innerHTML = searchResults(e.target.value);
+    box.hidden = false;
+  }
   if (e.target.id === "search-input")
     $("#results").innerHTML = searchResults(e.target.value);
   if (e.target.id === "gift-note") {
@@ -760,3 +1081,65 @@ refresh()
     loadFailed = true;
     toast("Live stock is unavailable. Please refresh before checking out.");
   });
+
+document.addEventListener("focusin", (e) => {
+  if (e.target.id === "mast-query") {
+    const box = $("#mast-results");
+    box.innerHTML = searchResults(e.target.value);
+    box.hidden = false;
+  } else if (!e.target.closest(".quick-search") && $("#mast-results"))
+    $("#mast-results").hidden = true;
+});
+document.addEventListener("pointerdown", (e) => {
+  if (!e.target.closest(".quick-search") && $("#mast-results"))
+    $("#mast-results").hidden = true;
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && $("#mast-results"))
+    $("#mast-results").hidden = true;
+});
+document.addEventListener("submit", (e) => {
+  if (e.target.id === "mast-search") {
+    e.preventDefault();
+    goto("/shop?q=" + encodeURIComponent($("#mast-query").value.trim()));
+  }
+  if (e.target.id === "rec-form") {
+    e.preventDefault();
+    const d = new FormData(e.target);
+    recSort = d.get("sort");
+    recStock = d.has("stock");
+    close();
+    $("#recommend").innerHTML = recommendations();
+  }
+});
+
+let slideGesture = null,
+  ignoreCampaignClick = 0;
+document.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".campaign-track"))
+    slideGesture = { x: e.clientX, y: e.clientY, id: e.pointerId };
+});
+document.addEventListener("pointerup", (e) => {
+  if (!slideGesture || e.pointerId !== slideGesture.id) return;
+  const dx = e.clientX - slideGesture.x,
+    dy = e.clientY - slideGesture.y;
+  slideGesture = null;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+    ignoreCampaignClick = performance.now() + 400;
+    setCampaign(campaignIndex + (dx < 0 ? 1 : -1));
+  }
+});
+document.addEventListener("pointercancel", () => (slideGesture = null));
+document.addEventListener(
+  "click",
+  (e) => {
+    if (
+      e.target.closest(".campaign-track") &&
+      performance.now() < ignoreCampaignClick
+    ) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  },
+  true,
+);

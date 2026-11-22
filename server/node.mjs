@@ -11,6 +11,7 @@ import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 import { database } from "./db.mjs";
 import { api } from "./api.mjs";
+import { assetResponse } from "./asset.mjs";
 const derive = promisify(scrypt),
   db = database(process.env.DATABASE_PATH || "data/store.sqlite"),
   sql = db.native,
@@ -21,6 +22,8 @@ const env = { ...process.env, DB: db, HOSTED: false },
     ".js": "text/javascript",
     ".html": "text/html",
     ".webp": "image/webp",
+    ".woff2": "font/woff2",
+    ".mp4": "video/mp4",
     ".ttf": "font/ttf",
     ".svg": "image/svg+xml",
   };
@@ -49,11 +52,18 @@ export const server = createServer(async (req, res) => {
       }
       try {
         const data = await readFile(path);
+        const asset = assetResponse(
+          { method: req.method, headers: new Headers(req.headers) },
+          types[extname(path)] || "application/octet-stream",
+          data,
+        );
         res
-          .writeHead(200, {
-            "content-type": types[extname(path)] || "application/octet-stream",
-          })
-          .end(req.method === "HEAD" ? undefined : data);
+          .writeHead(asset.status, Object.fromEntries(asset.headers))
+          .end(
+            req.method === "HEAD"
+              ? undefined
+              : Buffer.from(await asset.arrayBuffer()),
+          );
       } catch {
         res.writeHead(404).end();
       }

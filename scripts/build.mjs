@@ -12,6 +12,8 @@ async function collect(dir) {
     const key = "/" + path.relative("public", p),
       type = {
         ".webp": "image/webp",
+        ".woff2": "font/woff2",
+        ".mp4": "video/mp4",
         ".css": "text/css",
         ".html": "text/html",
         ".js": "text/javascript",
@@ -41,7 +43,13 @@ const catalog = (await readFile("public/catalog.js", "utf8")).replaceAll(
   api = (await readFile("server/api.mjs", "utf8"))
     .replace(/^import[\s\S]*?from "\.\.\/public\/catalog\.js";\s*/, "")
     .replace("export async function api", "async function api");
+const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
+  "export function assetResponse",
+  "function assetResponse",
+);
 const worker =
+  assetHelper +
+  "\n" +
   "const {initialProducts,initialSettings}=(()=>{" +
   catalog +
   "\nreturn {initialProducts:products,initialSettings:settings}})();\n" +
@@ -61,7 +69,7 @@ export default {async fetch(req,env){
  if(!id||!email||!env.HOSTED_ADMIN_EMAIL||email.toLowerCase()!==env.HOSTED_ADMIN_EMAIL.toLowerCase())return new Response("Owner access required",{status:403});
 }
  const a=assets[p==="/"?"/index.html":p];if(!a)return new Response("Not found",{status:404});
- return new Response(req.method==="HEAD"?null:Uint8Array.from(atob(a[1]),c=>c.charCodeAt(0)),{headers:{"content-type":a[0],"x-content-type-options":"nosniff","cache-control":a[0].startsWith("image/")||a[0].startsWith("font/")?"public, max-age=3600":"no-cache"}});
+ return assetResponse(req,a[0],Uint8Array.from(atob(a[1]),c=>c.charCodeAt(0)));
 }};\n`;
 await writeFile("dist/server/index.js", worker);
 await cp(".openai/hosting.json", "dist/.openai/hosting.json");
