@@ -1,114 +1,762 @@
-import {settings as defaults,products as samples} from "./catalog.js";
-import {icon} from "./icons.js";
-import {manage} from "./manage.js";
-const $=s=>document.querySelector(s);
-export const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmt=v=>"₹"+Number(v).toLocaleString("en-IN");
-const read=(key,def)=>{try{return JSON.parse(localStorage.getItem("gw."+key))??def}catch{return def}};
-const save=(key,obj)=>localStorage.setItem("gw."+key,JSON.stringify(obj));
-let state={settings:defaults,products:samples.map(p=>({...p,available:p.stock})),user:null,hosted:false,paymentsReady:false},bag=read("bag",{}),guestWishlist=read("wishlist",[]),coupon=read("coupon",""),giftNote=read("note",""),slide=0,quantity=1,accountTab="profile",filters={sort:"featured",range:"all",stock:false},adminTab="products",returnAfterAuth="",loadFailed=false;
-const cats=()=>state.settings.categories,product=id=>state.products.find(p=>p.id===id),category=id=>cats().find(c=>c.id===id),wishlist=()=>state.user?state.user.wishlist||[]:guestWishlist,bagCount=()=>Object.entries(bag).reduce((n,[id,q])=>n+(product(id)?q:0),0);
-export async function api(url,data){const res=await fetch(url,{method:data===undefined?"GET":"POST",headers:data===undefined?{}:{"content-type":"application/json"},body:data===undefined?undefined:JSON.stringify(data)});let result;try{result=await res.json()}catch{throw Error("The store is temporarily unavailable.")}if(!res.ok)throw Error(result.error||"Request could not be completed.");return result}
-async function refresh(){const data=await api("/api/store");state=data;loadFailed=false;header();footer()}
-let timer;function toast(msg){$("#toast").textContent=msg;$("#toast").classList.add("show");clearTimeout(timer);timer=setTimeout(()=>$("#toast").classList.remove("show"),2600)}
-const link=(route,text,cls="")=>`<a class="${cls}" href="#${esc(route)}">${text}</a>`;
-const brand=()=>link("/",'Go <i>Winks</i><sup>✦</sup>',"brand");
-const hash=()=>location.hash.slice(1)||"/",goto=r=>{close();if(hash()===r)render();else location.hash=r};
-const iconBtn=(action,name,key,cls="",extra="")=>`<button class="icon ${cls}" aria-label="${esc(name)}" title="${esc(name)}" data-act="${action}">${icon(key)}${extra}</button>`;
-function header(){
- const s=state.settings,n=bagCount();$("#announcement").textContent=s.announcement;
- $("#header").innerHTML=`<div class="mast"><button class="search-link" data-act="search">${icon("search")}<span>Search Go Winks</span></button><div class="mobile-tools">${iconBtn("menu","Open menu","menu")}${iconBtn("search","Search products","search")}</div>${brand()}<div class="actions">${iconBtn("account","My account","user","user-btn")}${iconBtn("wishlist","Wishlist","heart")}${iconBtn("bag","Shopping bag, "+n+" items","bag","",n?'<span class="count">'+n+'</span>':"")}</div></div>
- <nav aria-label="Shop navigation" class="nav">${link("/shop","Shop All "+icon("down"))}${cats().map(c=>link("/shop/"+c.id,esc(c.name),hash()==="/shop/"+c.id?"on":"")).join("")}${link("/gifting",icon("gift")+" Gifting Guide","nav-gift")}</nav>`;
+import { settings as defaults, products as samples } from "./catalog.js";
+import { icon } from "./icons.js";
+import { manage } from "./manage.js";
+const $ = (s) => document.querySelector(s);
+export const esc = (v) =>
+  String(v ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const fmt = (v) => "₹" + Number(v).toLocaleString("en-IN");
+const read = (key, def) => {
+  try {
+    return JSON.parse(localStorage.getItem("gw." + key)) ?? def;
+  } catch {
+    return def;
+  }
+};
+const save = (key, obj) =>
+  localStorage.setItem("gw." + key, JSON.stringify(obj));
+let state = {
+    settings: defaults,
+    products: samples.map((p) => ({ ...p, available: p.stock })),
+    user: null,
+    hosted: false,
+    paymentsReady: false,
+  },
+  bag = read("bag", {}),
+  guestWishlist = read("wishlist", []),
+  coupon = read("coupon", ""),
+  giftNote = read("note", ""),
+  slide = 0,
+  quantity = 1,
+  accountTab = "profile",
+  filters = { sort: "featured", range: "all", stock: false },
+  adminTab = "products",
+  returnAfterAuth = "",
+  loadFailed = false;
+const cats = () => state.settings.categories,
+  product = (id) => state.products.find((p) => p.id === id),
+  category = (id) => cats().find((c) => c.id === id),
+  wishlist = () => (state.user ? state.user.wishlist || [] : guestWishlist),
+  bagCount = () =>
+    Object.entries(bag).reduce((n, [id, q]) => n + (product(id) ? q : 0), 0);
+export async function api(url, data) {
+  const res = await fetch(url, {
+    method: data === undefined ? "GET" : "POST",
+    headers: data === undefined ? {} : { "content-type": "application/json" },
+    body: data === undefined ? undefined : JSON.stringify(data),
+  });
+  let result;
+  try {
+    result = await res.json();
+  } catch {
+    throw Error("The store is temporarily unavailable.");
+  }
+  if (!res.ok) throw Error(result.error || "Request could not be completed.");
+  return result;
 }
-function footer(){const s=state.settings;$("#footer").innerHTML=`<div class="footer"><div>${brand()}<p>${esc(s.story)}</p></div><div><h4>The boutique</h4>${link("/shop","Shop all")}${cats().map(c=>link("/shop/"+c.id,esc(c.name))).join("")}</div><div><h4>Customer care</h4>${link("/info/shipping","Shipping & delivery")}${link("/info/returns","Returns & exchanges")}${link("/info/contact","Contact us")}<button data-act="account">My account</button></div><div><h4>Go Winks</h4>${link("/info/story","Our story")}${link("/gifting","Gifting guide")}${link("/offers","Offers")}${link("/manage","Store management")}</div><div class="footnote">© Go Winks · India · INR</div></div>`}
-function open(title,body){const d=$("#dialog");$("#dialog-title").textContent=title;$("#dialog-body").innerHTML=body;if(!d.open)d.showModal();d.scrollTop=0}
-function close(){if($("#dialog").open)$("#dialog").close()}
-$("#dialog .close").onclick=close;$("#dialog").addEventListener("click",e=>{if(e.target===$("#dialog")&&e.clientX<$("#dialog").getBoundingClientRect().left)close()});
-const over=t=>`<div class="overline">${icon("spark")}${esc(t)}</div>`;
-function hero(){
- const s=state.settings,slides=[{...s,image:s.heroImage,category:""},...s.heroSlides],h=slides[slide]||slides[0];return `<section class="hero ${slide?"alt":""}" aria-label="Featured collection"><img class="hero-photo" src="${esc(h.image)}" alt="${slide?esc(h.eyebrow):"Go Winks truffle box, candlelight and blush silk"}" fetchpriority="high"><div class="hero-in"><div class="overline">${esc(h.eyebrow)}</div><h1>${esc(h.headline)}<em>${esc(h.italic)}</em></h1><p>${esc(h.subtitle)}</p>${link("/shop"+(h.category?"/"+h.category:""),esc(h.cta),"btn light")}</div><div class="carousel" aria-label="Campaign slides">${slides.map((x,i)=>`<button class="${i===slide?"active":""}" data-slide="${i}" aria-label="Show ${esc(x.eyebrow)}" aria-pressed="${i===slide}"></button>`).join("")}</div></section>`;
+async function refresh() {
+  const data = await api("/api/store");
+  state = data;
+  loadFailed = false;
+  header();
+  footer();
 }
-const perks=()=>`<div class="perks">${[["box","Discreet Packaging"],["gift","Gift-ready Details"],["leaf","Thoughtfully Curated"],["lock","Secure Checkout"]].map(([i,s])=>`<div class="perk">${icon(i)}<span>${s}</span></div>`).join("")}</div>`;
-const head=(sub,title,route,label)=>`<div class="section-head"><div>${over(sub)}<h2>${title}</h2></div>${route?link(route,label,"text-link"):""}</div>`;
-const catCard=c=>`<a class="category" href="#/shop/${esc(c.id)}"><img loading="lazy" src="${esc(c.image)}" alt=""><div class="cat-foot"><h3>${esc(c.name)}</h3>${icon("right")}</div></a>`;
-const card=p=>`<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"></a>${p.tag?'<span class="tag">'+esc(p.tag)+'</span>':""}<button class="heart-btn ${wishlist().includes(p.id)?"selected":""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button><div class="minor">${esc(category(p.category)?.name)}</div><h3>${link("/product/"+p.id,esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
-const crumbs=label=>`<div class="crumb">${link("/","Home")} &nbsp;/&nbsp; ${esc(label)}</div>`;
-const intro=(sub,t,p="")=>`<div class="intro">${over(sub)}<h1>${esc(t)}</h1>${p?'<p>'+esc(p)+'</p>':""}</div>`;
-const empty=(t,p)=>`<div class="empty"><h3>${esc(t)}</h3><p>${esc(p)}</p>${link("/shop","Explore the boutique","btn")}</div>`;
-function home(){return hero()+perks()+`<section class="section">${head("THE BOUTIQUE","Shop by <em>Category</em>","/shop","View all categories")}<div class="category-grid">${cats().map(catCard).join("")}</div></section><section class="section products-home">${head("THE SIGNATURE SELECTION","The <em>Favourites</em>","/shop","Shop all products")}<div class="product-grid">${state.products.slice(0,4).map(card).join("")}</div></section>`}
-function shop(route){const id=route[2],c=category(id),q=new URLSearchParams(hash().split("?")[1]).get("q")||"",list=state.products.filter(p=>(!c||p.category===id)&&(!q||(p.name+" "+p.detail+" "+category(p.category)?.name).toLowerCase().includes(q.toLowerCase()))&&(!filters.stock||p.available>0)&&(filters.range==="all"||(filters.range==="under"?p.price<1500:p.price>=1500)));if(filters.sort==="low")list.sort((a,b)=>a.price-b.price);if(filters.sort==="high")list.sort((a,b)=>b.price-a.price);if(filters.sort==="name")list.sort((a,b)=>a.name.localeCompare(b.name));
- return `<div class="inside">${crumbs(c?.name||"Shop all")}${intro("THE BOUTIQUE",q?'Results for “'+q+'”':c?.name||"Shop all",c?.detail||"Chocolates, gifts and sensorial rituals for two.")}<div class="filter-bar"><select aria-label="Collection" id="collection-filter"><option value="">All collections</option>${cats().map(x=>`<option value="${esc(x.id)}" ${x.id===id?"selected":""}>${esc(x.name)}</option>`).join("")}</select><select id="price-filter" aria-label="Price range">${[["all","All prices"],["under","Under ₹1,500"],["over","₹1,500 & above"]].map(([v,l])=>`<option value="${v}" ${v===filters.range?"selected":""}>${l}</option>`).join("")}</select><select id="sort" aria-label="Sort products">${[["featured","Featured"],["low","Price: low to high"],["high","Price: high to low"],["name","Name: A to Z"]].map(([v,l])=>`<option value="${v}" ${filters.sort===v?"selected":""}>${l}</option>`).join("")}</select><label><input type="checkbox" style="width:auto" id="stock-filter" ${filters.stock?"checked":""}> In stock</label><span class="count-text">${list.length} products</span></div>${list.length?'<div class="product-grid">'+list.map(card).join("")+'</div>':empty("No matching products","Try a different collection, search term or price range.")}</div>`;
+let timer;
+function toast(msg) {
+  $("#toast").textContent = msg;
+  $("#toast").classList.add("show");
+  clearTimeout(timer);
+  timer = setTimeout(() => $("#toast").classList.remove("show"), 2600);
 }
-const stepper=(id,n)=>`<div class="quantity"><button data-step="-1" data-id="${esc(id)}" aria-label="Decrease quantity">−</button><b>${n}</b><button data-step="1" data-id="${esc(id)}" aria-label="Increase quantity">+</button></div>`;
-function detail(id){const p=product(id);if(!p)return '<div class="inside">'+empty("Product unavailable","Explore the rest of the collection.")+'</div>';return `<div class="inside">${crumbs(category(p.category)?.name||"Product")}<div class="detail-layout"><img src="${esc(p.image)}" alt="${esc(p.name)}"><div class="details">${over(category(p.category)?.name||"")}<h1>${esc(p.name)}</h1><div class="detail-price">${fmt(p.price)}</div><small>Inclusive of applicable taxes</small><p class="copy">${esc(p.detail)}</p><p class="stock">${p.available?"In stock":"Sold out"}</p><div class="action-row">${stepper("detail",quantity)}<button class="btn" data-add="${esc(id)}" ${p.available?"":"disabled"}>Add to bag</button><button class="btn ghost ${wishlist().includes(id)?"selected":""}" data-heart="${esc(id)}" aria-label="Save to wishlist">${icon("heart")}</button></div><details open><summary>Product details</summary><p>${esc(p.spec)}</p></details><details><summary>Delivery & packaging</summary><p>${esc(state.settings.shipping)}</p></details><details><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details></div></div><section class="cross-section">${head("COMPLETE THE EVENING","You may also <em>love</em>")}<div class="product-grid">${state.products.filter(x=>x.id!==id).slice(0,4).map(card).join("")}</div></section></div>`}
-function bagItems(){return Object.entries(bag).map(([id,qty])=>({p:product(id),qty})).filter(i=>i.p&&i.qty>0)}
-function totals(){const s=state.settings,subtotal=bagItems().reduce((a,i)=>a+i.p.price*i.qty,0),discount=coupon&&coupon===s.coupon?Math.round(subtotal*s.discount/100):0,shipping=subtotal&&subtotal<s.shippingThreshold?s.shippingFee:0;return {subtotal,discount,shipping,total:subtotal-discount+shipping}}
-function sum(){const t=totals();return `<div class="summary"><div><span>Subtotal</span><span>${fmt(t.subtotal)}</span></div>${t.discount?'<div><span>Offer discount</span><span>−'+fmt(t.discount)+'</span></div>':""}<div><span>Shipping</span><span>${t.shipping?fmt(t.shipping):"Complimentary"}</span></div><div class="total"><span>Total</span><span>${fmt(t.total)}</span></div></div>`}
-function showBag(){const list=bagItems();open("Your bag",list.length?`${list.map(({p,qty})=>`<div class="row-item"><a href="#/product/${esc(p.id)}"><img src="${esc(p.image)}" alt="${esc(p.name)}"></a><div><h3>${esc(p.name)}</h3><span class="price">${fmt(p.price)}</span><br>${stepper(p.id,qty)}</div><button class="icon" data-remove="${esc(p.id)}" aria-label="Remove ${esc(p.name)}">${icon("x")}</button></div>`).join("")}<form id="coupon-form" class="action-row"><input name="code" aria-label="Offer code" placeholder="Offer code" maxlength="32" style="flex:1" value="${esc(coupon)}"><button class="btn ghost">Apply</button></form><div class="feedback" role="status" id="coupon-feedback"></div><label class="stack">Gift note (optional)<textarea id="gift-note" maxlength="240" placeholder="A little note for them…">${esc(giftNote)}</textarea></label>${sum()}<button class="btn wide" data-act="checkout">Continue to checkout</button>`:empty("Your bag is waiting","Find something to enjoy together."))}
-function changeBag(id,q){const p=product(id);if(!p)return;if(q>Math.min(10,p.available)){toast("Maximum available quantity reached.");return}if(q>0)bag[id]=q;else delete bag[id];save("bag",bag);sessionStorage.removeItem("gw.checkout");header();showBag()}
-async function toggleHeart(id){const current=wishlist(),next=current.includes(id)?current.filter(x=>x!==id):[...current,id];try{if(state.user){await api("/api/profile",{wishlist:next});state.user.wishlist=next}else{guestWishlist=next;save("wishlist",next)}render();toast(next.includes(id)?"Saved to your wishlist":"Removed from wishlist")}catch(e){toast(e.message)}}
-function searchResults(query){const q=query.trim().toLowerCase(),items=state.products.filter(p=>(p.name+" "+category(p.category)?.name+" "+p.detail).toLowerCase().includes(q));return `<div class="minor" style="margin:20px 0 7px">${q?"Matching products":"Explore products"}</div>${items.slice(0,6).map(p=>link("/product/"+p.id,`<img src="${esc(p.image)}" alt=""><div><strong>${esc(p.name)}</strong><div class="minor">${fmt(p.price)}</div></div>`,"search-result")).join("")||'<p>No products found. Try “candle” or “chocolate”.</p>'}${items.length&&q?link("/shop?q="+encodeURIComponent(query),"See all results","text-link"):""}`}
-function search(){open("Search the boutique",`<form id="search-form" class="search-box">${icon("search")}<input id="search-input" placeholder="Search chocolates, gifts, candles…" autocomplete="off" aria-label="Search products"></form><div id="results">${searchResults("")}</div>`);$("#search-input").focus()}
-const field=(key,label,val="",opts="")=>`<label>${esc(label)}<input name="${key}" value="${esc(val)}" ${opts}></label>`;
-function auth(register=false){
- if(state.hosted){open("Your account",`<p>Sign in to save your profile, wishlist and orders.</p><a class="btn" target="_top" href="/signin-with-chatgpt?return_to=${encodeURIComponent("/#"+(returnAfterAuth||"/account"))}">Sign in with ChatGPT</a>`);return}
- open(register?"Create your account":"Welcome back",`<form id="auth-form" data-mode="${register?"register":"login"}" class="stack">${register?field("name","Your name","","required autocomplete=name"):""}${field("email","Email address","","type=email required autocomplete=email")}${field("password","Password","","type=password required minlength=10 maxlength=256 autocomplete="+(register?"new-password":"current-password"))}<small>${register?"Choose a password with at least 10 characters.":""}</small><div class="feedback" role="alert"></div><button class="btn">${register?"Create account":"Sign in"}</button></form><p><button class="text-link" data-act="${register?"login":"register"}">${register?"Already registered? Sign in":"New to Go Winks? Create an account"}</button></p>`);
+const link = (route, text, cls = "") =>
+  `<a class="${cls}" href="#${esc(route)}">${text}</a>`;
+const brand = () => link("/", "Go <i>Winks</i><sup>✦</sup>", "brand");
+const hash = () => location.hash.slice(1) || "/",
+  goto = (r) => {
+    close();
+    if (hash() === r) render();
+    else location.hash = r;
+  };
+const iconBtn = (action, name, key, cls = "", extra = "") =>
+  `<button class="icon ${cls}" aria-label="${esc(name)}" title="${esc(name)}" data-act="${action}">${icon(key)}${extra}</button>`;
+function header() {
+  const s = state.settings,
+    n = bagCount();
+  $("#announcement").textContent = s.announcement;
+  $("#header").innerHTML =
+    `<div class="mast"><button class="search-link" data-act="search">${icon("search")}<span>Search Go Winks</span></button><div class="mobile-tools">${iconBtn("menu", "Open menu", "menu")}${iconBtn("search", "Search products", "search")}</div>${brand()}<div class="actions">${iconBtn("account", "My account", "user", "user-btn")}${iconBtn("wishlist", "Wishlist", "heart")}${iconBtn("bag", "Shopping bag, " + n + " items", "bag", "", n ? '<span class="count">' + n + "</span>" : "")}</div></div>
+ <nav aria-label="Shop navigation" class="nav">${link("/shop", "Shop All " + icon("down"))}${cats()
+   .map((c) =>
+     link("/shop/" + c.id, esc(c.name), hash() === "/shop/" + c.id ? "on" : ""),
+   )
+   .join(
+     "",
+   )}${link("/gifting", icon("gift") + " Gifting Guide", "nav-gift")}</nav>`;
 }
-const addressFields=(v,required=true)=>`<div class="form-grid">${field("name","Full name",v.name,required?"required autocomplete=name":"autocomplete=name")}${field("phone","Mobile number",v.phone,'type="tel" inputmode="numeric" pattern="[0-9]{10}" autocomplete=tel '+(required?"required":""))}<label class="full">Delivery address<textarea name="address" autocomplete="street-address" ${required?"required minlength=5":""}>${esc(v.address)}</textarea></label>${field("city","City",v.city,(required?"required ":"")+"autocomplete=address-level2")}${field("state","State / union territory",v.state,(required?"required ":"")+"autocomplete=address-level1")}${field("pin","PIN code",v.pin,'inputmode="numeric" pattern="[0-9]{6}" autocomplete=postal-code '+(required?"required":""))}</div>`;
-function checkout(){if(!bagItems().length){showBag();return}if(!state.user){returnAfterAuth="/checkout";auth();return}
- open("Checkout",`<p>Delivering within India. All orders ship in discreet packaging.</p><form id="checkout-form" class="stack">${addressFields(state.user)}${sum()}${state.paymentsReady?"":'<div class="notice">Online payments are awaiting merchant activation. Your bag is saved.</div>'}<div class="feedback" role="alert"></div><button class="btn" ${state.paymentsReady?"":"disabled"}>Pay ${fmt(totals().total)} with Razorpay</button></form>`);
+function footer() {
+  const s = state.settings;
+  $("#footer").innerHTML =
+    `<div class="footer"><div>${brand()}<p>${esc(s.story)}</p></div><div><h4>The boutique</h4>${link("/shop", "Shop all")}${cats()
+      .map((c) => link("/shop/" + c.id, esc(c.name)))
+      .join(
+        "",
+      )}</div><div><h4>Customer care</h4>${link("/info/shipping", "Shipping & delivery")}${link("/info/returns", "Returns & exchanges")}${link("/info/contact", "Contact us")}<button data-act="account">My account</button></div><div><h4>Go Winks</h4>${link("/info/story", "Our story")}${link("/gifting", "Gifting guide")}${link("/offers", "Offers")}${link("/manage", "Store management")}</div><div class="footnote">© Go Winks · India · INR</div></div>`;
 }
-async function pay(form){if(!state.paymentsReady)return;const b=Object.fromEntries(new FormData(form)),items=bagItems().map(({p,qty})=>({id:p.id,qty})),fingerprint=JSON.stringify([items,b,coupon,giftNote]);let checkpoint;try{checkpoint=JSON.parse(sessionStorage.getItem("gw.checkout"))}catch{}if(!checkpoint||checkpoint.fingerprint!==fingerprint){checkpoint={fingerprint,id:crypto.randomUUID()};sessionStorage.setItem("gw.checkout",JSON.stringify(checkpoint))}
- const result=await api("/api/checkout",{requestId:checkpoint.id,address:b,items,coupon,note:giftNote});await launchPayment(result.order,result.key);
+function open(title, body) {
+  const d = $("#dialog");
+  $("#dialog-title").textContent = title;
+  $("#dialog-body").innerHTML = body;
+  if (!d.open) d.showModal();
+  d.scrollTop = 0;
 }
-async function launchPayment(order,key){
- if(!window.Razorpay){await new Promise((resolve,reject)=>{const el=document.createElement("script");el.src="https://checkout.razorpay.com/v1/checkout.js";el.onload=resolve;el.onerror=()=>reject(Error("Checkout could not load. Retry from your order history."));document.head.append(el)})}
- close();new window.Razorpay({key,order_id:order.provider,amount:order.total*100,currency:"INR",name:"Go Winks",description:order.id,prefill:{name:order.address.name,email:order.email,contact:order.address.phone},theme:{color:"#53182e"},modal:{ondismiss:()=>{accountTab="orders";goto("/account")}},handler:async response=>{try{await api("/api/verify",{id:order.id,payment:response.razorpay_payment_id,signature:response.razorpay_signature});bag={};coupon="";giftNote="";save("bag",bag);save("coupon","");save("note","");sessionStorage.removeItem("gw.checkout");await refresh();accountTab="orders";goto("/account");toast("Payment confirmed. Your order is saved.")}catch(e){accountTab="orders";goto("/account");toast(e.message)}}}).open()
+function close() {
+  if ($("#dialog").open) $("#dialog").close();
 }
-const orderCard=o=>`<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map(i=>`<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${o.tracking?'<p>Tracking: '+esc(o.tracking.courier)+" "+esc(o.tracking.awb)+" · "+esc(o.tracking.status)+'</p>':""}${o.status==="Awaiting payment"&&o.userId===state.user?.id?'<button class="text-link" data-resume="'+esc(o.id)+'">Resume payment</button>':""}${o.note?"<p>Gift note: "+esc(o.note)+"</p>":""}</article>`;
-function account(){const u=state.user;if(!u)return '<div class="inside">'+intro("YOUR ACCOUNT","My account","Sign in to manage your profile, saved address and orders.")+'<button class="btn" data-act="login">Sign in or create an account</button></div>';
- const tabs=[["profile","Profile"],["orders","Orders"],["help","Contact the store"]];return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT",u.name?"Hello, "+u.name.split(" ")[0]:"My account",u.email)}<div class="account-tabs">${tabs.map(([v,l])=>`<button data-account-tab="${v}" class="${v===accountTab?"current":""}">${l}</button>`).join("")}${["admin","manager"].includes(u.role)?link("/manage","Store management","text-link"):""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab==="profile"?`<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u,false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>`:accountTab==="help"?'<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>':'<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
-}
-function render(){
- const route=hash().split("?")[0].split("/"),page=route[1],main=$("#main"),s=state.settings;header();
- if(!page)main.innerHTML=home();else if(page==="shop")main.innerHTML=shop(route);else if(page==="product")main.innerHTML=detail(route[2]);else if(page==="wishlist"){const saved=state.products.filter(p=>wishlist().includes(p.id));main.innerHTML=`<div class="inside">${crumbs("Wishlist")}${intro("SAVED FOR LATER","Your wishlist")}${saved.length?'<div class="product-grid">'+saved.map(card).join("")+'</div>':empty("No saved favourites yet","Tap the heart on a product to keep it here.")}</div>`}
- else if(page==="account"||page==="checkout"){main.innerHTML=account();if(accountTab==="orders"&&state.user){api("/api/orders").then(o=>{if($("#orders"))$("#orders").innerHTML=o.length?o.map(orderCard).join(""):empty("No orders yet","Your purchases and delivery updates will appear here.")}).catch(e=>{if($("#orders"))$("#orders").textContent=e.message})}if(page==="checkout")checkout()}
- else if(page==="gifting")main.innerHTML=`<div class="inside">${crumbs("Gifting guide")}${intro("FOR SOMEONE SPECIAL","The gifting guide","Choose a gift for their favourite kind of evening.")}<div class="category-grid">${cats().map(catCard).join("")}</div><section class="cross-section">${head("CURATED GIFTS","Made for <em>two</em>")}<div class="product-grid">${state.products.filter(p=>p.category==="gifts").map(card).join("")}</div></section></div>`;
- else if(page==="offers")main.innerHTML=`<div class="inside">${crumbs("Offers")}${intro("THE BOUTIQUE","Offers")}${s.coupon?`<h3>${esc(s.discount)}% off your order</h3><p>Enter <b>${esc(s.coupon)}</b> in your bag.</p>`:"<p>There are no current promotions.</p>"}<p class="action-row">${link("/shop","Shop the collection","btn")}</p></div>`;
- else if(page==="info"){const titles={shipping:"Shipping & delivery",returns:"Returns & exchanges",story:"Our story",contact:"Contact us"},k=route[2];main.innerHTML=`<div class="inside">${crumbs(titles[k]||"Store information")}${intro("GO WINKS",titles[k]||"Store information")}<p class="policy">${esc(titles[k]?s[k]:"")}</p>${k==="contact"?'<button class="btn action-row" data-act="help">Message the store</button>':""}</div>`}
- else if(page==="manage"){manage({state,api,esc,fmt,main,intro,crumbs,open,close,refresh,toast,tab:adminTab,setTab:t=>{adminTab=t;render()},render,orderCard,field});}
- else main.innerHTML='<div class="inside">'+empty("Page not found","Browse the boutique to continue.")+'</div>';
- document.title=(page==="product"?product(route[2])?.name:page==="shop"?category(route[2])?.name||"Shop all":({wishlist:"Wishlist",manage:"Store management",account:"My account",gifting:"Gifting guide"})[page]||"The Couples’ Boutique")+" | Go Winks";
-}
-window.addEventListener("hashchange",()=>{close();quantity=1;render();scrollTo(0,0)});
-document.addEventListener("click",async e=>{const el=e.target.closest("button,a");if(!el)return;
- if(el.tagName==="A"&&el.getAttribute("href")?.startsWith("#")){if(el.getAttribute("href")==="#"+hash())close();return}
- if(el.hasAttribute("data-slide")){slide=Number(el.dataset.slide);$(".hero").outerHTML=hero();return}
- if(el.dataset.heart){await toggleHeart(el.dataset.heart);return}
- if(el.dataset.resume){try{const r=await api("/api/resume",{id:el.dataset.resume});await launchPayment(r.order,r.key)}catch(e){toast(e.message)}return}
- if(el.dataset.add){changeBag(el.dataset.add,(bag[el.dataset.add]||0)+quantity);return}
- if(el.dataset.remove){changeBag(el.dataset.remove,0);return}
- if(el.dataset.step){const n=Number(el.dataset.step),id=el.dataset.id;if(id==="detail"){quantity=Math.max(1,Math.min(quantity+n,Math.min(10,product(hash().split("/")[2])?.available||1)));render()}else changeBag(id,(bag[id]||0)+n);return}
- if(el.dataset.accountTab){accountTab=el.dataset.accountTab;render();return}
- switch(el.dataset.act){
- case "menu":open("Explore Go Winks",link("/shop","Shop all","menu-link")+cats().map(c=>link("/shop/"+c.id,esc(c.name),"menu-link")).join("")+link("/gifting","Gifting guide","menu-link")+link("/account","My account","menu-link")+link("/offers","Offers","menu-link"));break;
- case "search":search();break;case "bag":showBag();break;case "wishlist":goto("/wishlist");break;case "checkout":checkout();break;
- case "account":state.user?goto("/account"):auth();break;case "login":auth();break;case "register":auth(true);break;
- case "help":accountTab="help";if(state.user)goto("/account");else{returnAfterAuth="/account";auth()}break;
- case "logout":if(state.hosted){window.top.location.href="/signout-with-chatgpt?return_to=/";return}await api("/api/auth/logout",{});await refresh();goto("/");toast("Signed out");break;
- }
+$("#dialog .close").onclick = close;
+$("#dialog").addEventListener("click", (e) => {
+  if (
+    e.target === $("#dialog") &&
+    e.clientX < $("#dialog").getBoundingClientRect().left
+  )
+    close();
 });
-document.addEventListener("input",e=>{if(e.target.id==="search-input")$("#results").innerHTML=searchResults(e.target.value);if(e.target.id==="gift-note"){giftNote=e.target.value;save("note",giftNote)}});
-document.addEventListener("change",e=>{const el=e.target;if(el.id==="collection-filter")goto("/shop"+(el.value?"/"+el.value:""));if(el.id==="price-filter"){filters.range=el.value;render()}if(el.id==="sort"){filters.sort=el.value;render()}if(el.id==="stock-filter"){filters.stock=el.checked;render()}});
-document.addEventListener("submit",async e=>{const f=e.target;if(!["search-form","coupon-form","auth-form","profile-form","help-form","checkout-form"].includes(f.id))return;e.preventDefault();const values=Object.fromEntries(new FormData(f)),btn=f.querySelector('button:not([type="button"])'),feedback=f.querySelector(".feedback");if(btn)btn.disabled=true;if(feedback)feedback.textContent="";
- try{
- if(f.id==="search-form"){goto("/shop?q="+encodeURIComponent($("#search-input").value.trim()));return}
- if(f.id==="coupon-form"){const c=values.code.trim().toUpperCase();if(c&&c!==state.settings.coupon){$("#coupon-feedback").textContent="This offer code is not valid.";return}coupon=c;save("coupon",c);sessionStorage.removeItem("gw.checkout");showBag();$("#coupon-feedback").textContent=c?"Offer applied.":"Offer removed.";return}
- if(f.id==="auth-form"){await api("/api/auth/"+f.dataset.mode,values);await refresh();if(guestWishlist.length){const next=[...new Set([...state.user.wishlist,...guestWishlist])];await api("/api/profile",{wishlist:next});state.user.wishlist=next;guestWishlist=[];save("wishlist",[])}const dest=returnAfterAuth||"/account";returnAfterAuth="";goto(dest);return}
- if(f.id==="profile-form"){const u=await api("/api/profile",values);state.user={...state.user,...u};feedback.textContent="Your profile has been saved.";return}
- if(f.id==="help-form"){await api("/api/contact",values);f.reset();feedback.textContent="Your message has been sent to the store team.";return}
- if(f.id==="checkout-form")await pay(f);
- }catch(err){if(feedback)feedback.textContent=err.message;else toast(err.message)}finally{if(btn&&btn.isConnected)btn.disabled=false}
+const over = (t) => `<div class="overline">${icon("spark")}${esc(t)}</div>`;
+function hero() {
+  const s = state.settings,
+    slides = [{ ...s, image: s.heroImage, category: "" }, ...s.heroSlides],
+    h = slides[slide] || slides[0];
+  return `<section class="hero ${slide ? "alt" : ""}" aria-label="Featured collection"><img class="hero-photo" src="${esc(h.image)}" alt="${slide ? esc(h.eyebrow) : "Go Winks truffle box, candlelight and blush silk"}" fetchpriority="high"><div class="hero-in"><div class="overline">${esc(h.eyebrow)}</div><h1>${esc(h.headline)}<em>${esc(h.italic)}</em></h1><p>${esc(h.subtitle)}</p>${link("/shop" + (h.category ? "/" + h.category : ""), esc(h.cta), "btn light")}</div><div class="carousel" aria-label="Campaign slides">${slides.map((x, i) => `<button class="${i === slide ? "active" : ""}" data-slide="${i}" aria-label="Show ${esc(x.eyebrow)}" aria-pressed="${i === slide}"></button>`).join("")}</div></section>`;
+}
+const perks = () =>
+  `<div class="perks">${[
+    ["box", "Discreet Packaging"],
+    ["gift", "Gift-ready Details"],
+    ["leaf", "Thoughtfully Curated"],
+    ["lock", "Secure Checkout"],
+  ]
+    .map(([i, s]) => `<div class="perk">${icon(i)}<span>${s}</span></div>`)
+    .join("")}</div>`;
+const head = (sub, title, route, label) =>
+  `<div class="section-head"><div>${over(sub)}<h2>${title}</h2></div>${route ? link(route, label, "text-link") : ""}</div>`;
+const catCard = (c) =>
+  `<a class="category" href="#/shop/${esc(c.id)}"><img loading="lazy" src="${esc(c.image)}" alt=""><div class="cat-foot"><h3>${esc(c.name)}</h3>${icon("right")}</div></a>`;
+const card = (p) =>
+  `<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"></a>${p.tag ? '<span class="tag">' + esc(p.tag) + "</span>" : ""}<button class="heart-btn ${wishlist().includes(p.id) ? "selected" : ""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button><div class="minor">${esc(category(p.category)?.name)}</div><h3>${link("/product/" + p.id, esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
+const crumbs = (label) =>
+  `<div class="crumb">${link("/", "Home")} &nbsp;/&nbsp; ${esc(label)}</div>`;
+const intro = (sub, t, p = "") =>
+  `<div class="intro">${over(sub)}<h1>${esc(t)}</h1>${p ? "<p>" + esc(p) + "</p>" : ""}</div>`;
+const empty = (t, p) =>
+  `<div class="empty"><h3>${esc(t)}</h3><p>${esc(p)}</p>${link("/shop", "Explore the boutique", "btn")}</div>`;
+function home() {
+  return (
+    hero() +
+    perks() +
+    `<section class="section">${head("THE BOUTIQUE", "Shop by <em>Category</em>", "/shop", "View all categories")}<div class="category-grid">${cats().map(catCard).join("")}</div></section><section class="section products-home">${head("THE SIGNATURE SELECTION", "The <em>Favourites</em>", "/shop", "Shop all products")}<div class="product-grid">${state.products.slice(0, 4).map(card).join("")}</div></section>`
+  );
+}
+function shop(route) {
+  const id = route[2],
+    c = category(id),
+    q = new URLSearchParams(hash().split("?")[1]).get("q") || "",
+    list = state.products.filter(
+      (p) =>
+        (!c || p.category === id) &&
+        (!q ||
+          (p.name + " " + p.detail + " " + category(p.category)?.name)
+            .toLowerCase()
+            .includes(q.toLowerCase())) &&
+        (!filters.stock || p.available > 0) &&
+        (filters.range === "all" ||
+          (filters.range === "under" ? p.price < 1500 : p.price >= 1500)),
+    );
+  if (filters.sort === "low") list.sort((a, b) => a.price - b.price);
+  if (filters.sort === "high") list.sort((a, b) => b.price - a.price);
+  if (filters.sort === "name")
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="inside">${crumbs(c?.name || "Shop all")}${intro("THE BOUTIQUE", q ? "Results for “" + q + "”" : c?.name || "Shop all", c?.detail || "Chocolates, gifts and sensorial rituals for two.")}<div class="filter-bar"><select aria-label="Collection" id="collection-filter"><option value="">All collections</option>${cats()
+    .map(
+      (x) =>
+        `<option value="${esc(x.id)}" ${x.id === id ? "selected" : ""}>${esc(x.name)}</option>`,
+    )
+    .join("")}</select><select id="price-filter" aria-label="Price range">${[
+    ["all", "All prices"],
+    ["under", "Under ₹1,500"],
+    ["over", "₹1,500 & above"],
+  ]
+    .map(
+      ([v, l]) =>
+        `<option value="${v}" ${v === filters.range ? "selected" : ""}>${l}</option>`,
+    )
+    .join("")}</select><select id="sort" aria-label="Sort products">${[
+    ["featured", "Featured"],
+    ["low", "Price: low to high"],
+    ["high", "Price: high to low"],
+    ["name", "Name: A to Z"],
+  ]
+    .map(
+      ([v, l]) =>
+        `<option value="${v}" ${filters.sort === v ? "selected" : ""}>${l}</option>`,
+    )
+    .join(
+      "",
+    )}</select><label><input type="checkbox" style="width:auto" id="stock-filter" ${filters.stock ? "checked" : ""}> In stock</label><span class="count-text">${list.length} products</span></div>${list.length ? '<div class="product-grid">' + list.map(card).join("") + "</div>" : empty("No matching products", "Try a different collection, search term or price range.")}</div>`;
+}
+const stepper = (id, n) =>
+  `<div class="quantity"><button data-step="-1" data-id="${esc(id)}" aria-label="Decrease quantity">−</button><b>${n}</b><button data-step="1" data-id="${esc(id)}" aria-label="Increase quantity">+</button></div>`;
+function detail(id) {
+  const p = product(id);
+  if (!p)
+    return (
+      '<div class="inside">' +
+      empty("Product unavailable", "Explore the rest of the collection.") +
+      "</div>"
+    );
+  return `<div class="inside">${crumbs(category(p.category)?.name || "Product")}<div class="detail-layout"><img src="${esc(p.image)}" alt="${esc(p.name)}"><div class="details">${over(category(p.category)?.name || "")}<h1>${esc(p.name)}</h1><div class="detail-price">${fmt(p.price)}</div><small>Inclusive of applicable taxes</small><p class="copy">${esc(p.detail)}</p><p class="stock">${p.available ? "In stock" : "Sold out"}</p><div class="action-row">${stepper("detail", quantity)}<button class="btn" data-add="${esc(id)}" ${p.available ? "" : "disabled"}>Add to bag</button><button class="btn ghost ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-label="Save to wishlist">${icon("heart")}</button></div><details open><summary>Product details</summary><p>${esc(p.spec)}</p></details><details><summary>Delivery & packaging</summary><p>${esc(state.settings.shipping)}</p></details><details><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details></div></div><section class="cross-section">${head("COMPLETE THE EVENING", "You may also <em>love</em>")}<div class="product-grid">${state.products
+    .filter((x) => x.id !== id)
+    .slice(0, 4)
+    .map(card)
+    .join("")}</div></section></div>`;
+}
+function bagItems() {
+  return Object.entries(bag)
+    .map(([id, qty]) => ({ p: product(id), qty }))
+    .filter((i) => i.p && i.qty > 0);
+}
+function totals() {
+  const s = state.settings,
+    subtotal = bagItems().reduce((a, i) => a + i.p.price * i.qty, 0),
+    discount =
+      coupon && coupon === s.coupon
+        ? Math.round((subtotal * s.discount) / 100)
+        : 0,
+    shipping = subtotal && subtotal < s.shippingThreshold ? s.shippingFee : 0;
+  return {
+    subtotal,
+    discount,
+    shipping,
+    total: subtotal - discount + shipping,
+  };
+}
+function sum() {
+  const t = totals();
+  return `<div class="summary"><div><span>Subtotal</span><span>${fmt(t.subtotal)}</span></div>${t.discount ? "<div><span>Offer discount</span><span>−" + fmt(t.discount) + "</span></div>" : ""}<div><span>Shipping</span><span>${t.shipping ? fmt(t.shipping) : "Complimentary"}</span></div><div class="total"><span>Total</span><span>${fmt(t.total)}</span></div></div>`;
+}
+function showBag() {
+  const list = bagItems();
+  open(
+    "Your bag",
+    list.length
+      ? `${list.map(({ p, qty }) => `<div class="row-item"><a href="#/product/${esc(p.id)}"><img src="${esc(p.image)}" alt="${esc(p.name)}"></a><div><h3>${esc(p.name)}</h3><span class="price">${fmt(p.price)}</span><br>${stepper(p.id, qty)}</div><button class="icon" data-remove="${esc(p.id)}" aria-label="Remove ${esc(p.name)}">${icon("x")}</button></div>`).join("")}<form id="coupon-form" class="action-row"><input name="code" aria-label="Offer code" placeholder="Offer code" maxlength="32" style="flex:1" value="${esc(coupon)}"><button class="btn ghost">Apply</button></form><div class="feedback" role="status" id="coupon-feedback"></div><label class="stack">Gift note (optional)<textarea id="gift-note" maxlength="240" placeholder="A little note for them…">${esc(giftNote)}</textarea></label>${sum()}<button class="btn wide" data-act="checkout">Continue to checkout</button>`
+      : empty("Your bag is waiting", "Find something to enjoy together."),
+  );
+}
+function changeBag(id, q) {
+  const p = product(id);
+  if (!p) return;
+  if (q > Math.min(10, p.available)) {
+    toast("Maximum available quantity reached.");
+    return;
+  }
+  if (q > 0) bag[id] = q;
+  else delete bag[id];
+  save("bag", bag);
+  sessionStorage.removeItem("gw.checkout");
+  header();
+  showBag();
+}
+async function toggleHeart(id) {
+  const current = wishlist(),
+    next = current.includes(id)
+      ? current.filter((x) => x !== id)
+      : [...current, id];
+  try {
+    if (state.user) {
+      await api("/api/profile", { wishlist: next });
+      state.user.wishlist = next;
+    } else {
+      guestWishlist = next;
+      save("wishlist", next);
+    }
+    render();
+    toast(
+      next.includes(id) ? "Saved to your wishlist" : "Removed from wishlist",
+    );
+  } catch (e) {
+    toast(e.message);
+  }
+}
+function searchResults(query) {
+  const q = query.trim().toLowerCase(),
+    items = state.products.filter((p) =>
+      (p.name + " " + category(p.category)?.name + " " + p.detail)
+        .toLowerCase()
+        .includes(q),
+    );
+  return `<div class="minor" style="margin:20px 0 7px">${q ? "Matching products" : "Explore products"}</div>${
+    items
+      .slice(0, 6)
+      .map((p) =>
+        link(
+          "/product/" + p.id,
+          `<img src="${esc(p.image)}" alt=""><div><strong>${esc(p.name)}</strong><div class="minor">${fmt(p.price)}</div></div>`,
+          "search-result",
+        ),
+      )
+      .join("") || "<p>No products found. Try “candle” or “chocolate”.</p>"
+  }${items.length && q ? link("/shop?q=" + encodeURIComponent(query), "See all results", "text-link") : ""}`;
+}
+function search() {
+  open(
+    "Search the boutique",
+    `<form id="search-form" class="search-box">${icon("search")}<input id="search-input" placeholder="Search chocolates, gifts, candles…" autocomplete="off" aria-label="Search products"></form><div id="results">${searchResults("")}</div>`,
+  );
+  $("#search-input").focus();
+}
+const field = (key, label, val = "", opts = "") =>
+  `<label>${esc(label)}<input name="${key}" value="${esc(val)}" ${opts}></label>`;
+function auth(register = false) {
+  if (state.hosted) {
+    open(
+      "Your account",
+      `<p>Sign in to save your profile, wishlist and orders.</p><a class="btn" target="_top" href="/signin-with-chatgpt?return_to=${encodeURIComponent("/#" + (returnAfterAuth || "/account"))}">Sign in with ChatGPT</a>`,
+    );
+    return;
+  }
+  open(
+    register ? "Create your account" : "Welcome back",
+    `<form id="auth-form" data-mode="${register ? "register" : "login"}" class="stack">${register ? field("name", "Your name", "", "required autocomplete=name") : ""}${field("email", "Email address", "", "type=email required autocomplete=email")}${field("password", "Password", "", "type=password required minlength=10 maxlength=256 autocomplete=" + (register ? "new-password" : "current-password"))}<small>${register ? "Choose a password with at least 10 characters." : ""}</small><div class="feedback" role="alert"></div><button class="btn">${register ? "Create account" : "Sign in"}</button></form><p><button class="text-link" data-act="${register ? "login" : "register"}">${register ? "Already registered? Sign in" : "New to Go Winks? Create an account"}</button></p>`,
+  );
+}
+const addressFields = (v, required = true) =>
+  `<div class="form-grid">${field("name", "Full name", v.name, required ? "required autocomplete=name" : "autocomplete=name")}${field("phone", "Mobile number", v.phone, 'type="tel" inputmode="numeric" pattern="[0-9]{10}" autocomplete=tel ' + (required ? "required" : ""))}<label class="full">Delivery address<textarea name="address" autocomplete="street-address" ${required ? "required minlength=5" : ""}>${esc(v.address)}</textarea></label>${field("city", "City", v.city, (required ? "required " : "") + "autocomplete=address-level2")}${field("state", "State / union territory", v.state, (required ? "required " : "") + "autocomplete=address-level1")}${field("pin", "PIN code", v.pin, 'inputmode="numeric" pattern="[0-9]{6}" autocomplete=postal-code ' + (required ? "required" : ""))}</div>`;
+function checkout() {
+  if (!bagItems().length) {
+    showBag();
+    return;
+  }
+  if (!state.user) {
+    returnAfterAuth = "/checkout";
+    auth();
+    return;
+  }
+  open(
+    "Checkout",
+    `<p>Delivering within India. All orders ship in discreet packaging.</p><form id="checkout-form" class="stack">${addressFields(state.user)}${sum()}${state.paymentsReady ? "" : '<div class="notice">Online payments are awaiting merchant activation. Your bag is saved.</div>'}<div class="feedback" role="alert"></div><button class="btn" ${state.paymentsReady ? "" : "disabled"}>Pay ${fmt(totals().total)} with Razorpay</button></form>`,
+  );
+}
+async function pay(form) {
+  if (!state.paymentsReady) return;
+  const b = Object.fromEntries(new FormData(form)),
+    items = bagItems().map(({ p, qty }) => ({ id: p.id, qty })),
+    fingerprint = JSON.stringify([items, b, coupon, giftNote]);
+  let checkpoint;
+  try {
+    checkpoint = JSON.parse(sessionStorage.getItem("gw.checkout"));
+  } catch {}
+  if (!checkpoint || checkpoint.fingerprint !== fingerprint) {
+    checkpoint = { fingerprint, id: crypto.randomUUID() };
+    sessionStorage.setItem("gw.checkout", JSON.stringify(checkpoint));
+  }
+  const result = await api("/api/checkout", {
+    requestId: checkpoint.id,
+    address: b,
+    items,
+    coupon,
+    note: giftNote,
+  });
+  await launchPayment(result.order, result.key);
+}
+async function launchPayment(order, key) {
+  if (!window.Razorpay) {
+    await new Promise((resolve, reject) => {
+      const el = document.createElement("script");
+      el.src = "https://checkout.razorpay.com/v1/checkout.js";
+      el.onload = resolve;
+      el.onerror = () =>
+        reject(
+          Error("Checkout could not load. Retry from your order history."),
+        );
+      document.head.append(el);
+    });
+  }
+  close();
+  new window.Razorpay({
+    key,
+    order_id: order.provider,
+    amount: order.total * 100,
+    currency: "INR",
+    name: "Go Winks",
+    description: order.id,
+    prefill: {
+      name: order.address.name,
+      email: order.email,
+      contact: order.address.phone,
+    },
+    theme: { color: "#53182e" },
+    modal: {
+      ondismiss: () => {
+        accountTab = "orders";
+        goto("/account");
+      },
+    },
+    handler: async (response) => {
+      try {
+        await api("/api/verify", {
+          id: order.id,
+          payment: response.razorpay_payment_id,
+          signature: response.razorpay_signature,
+        });
+        bag = {};
+        coupon = "";
+        giftNote = "";
+        save("bag", bag);
+        save("coupon", "");
+        save("note", "");
+        sessionStorage.removeItem("gw.checkout");
+        await refresh();
+        accountTab = "orders";
+        goto("/account");
+        toast("Payment confirmed. Your order is saved.");
+      } catch (e) {
+        accountTab = "orders";
+        goto("/account");
+        toast(e.message);
+      }
+    },
+  }).open();
+}
+const orderCard = (o) =>
+  `<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map((i) => `<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${o.tracking ? "<p>Tracking: " + esc(o.tracking.courier) + " " + esc(o.tracking.awb) + " · " + esc(o.tracking.status) + "</p>" : ""}${o.status === "Awaiting payment" && o.userId === state.user?.id ? '<button class="text-link" data-resume="' + esc(o.id) + '">Resume payment</button>' : ""}${o.note ? "<p>Gift note: " + esc(o.note) + "</p>" : ""}</article>`;
+function account() {
+  const u = state.user;
+  if (!u)
+    return (
+      '<div class="inside">' +
+      intro(
+        "YOUR ACCOUNT",
+        "My account",
+        "Sign in to manage your profile, saved address and orders.",
+      ) +
+      '<button class="btn" data-act="login">Sign in or create an account</button></div>'
+    );
+  const tabs = [
+    ["profile", "Profile"],
+    ["orders", "Orders"],
+    ["help", "Contact the store"],
+  ];
+  return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
+}
+function render() {
+  const route = hash().split("?")[0].split("/"),
+    page = route[1],
+    main = $("#main"),
+    s = state.settings;
+  header();
+  if (!page) main.innerHTML = home();
+  else if (page === "shop") main.innerHTML = shop(route);
+  else if (page === "product") main.innerHTML = detail(route[2]);
+  else if (page === "wishlist") {
+    const saved = state.products.filter((p) => wishlist().includes(p.id));
+    main.innerHTML = `<div class="inside">${crumbs("Wishlist")}${intro("SAVED FOR LATER", "Your wishlist")}${saved.length ? '<div class="product-grid">' + saved.map(card).join("") + "</div>" : empty("No saved favourites yet", "Tap the heart on a product to keep it here.")}</div>`;
+  } else if (page === "account" || page === "checkout") {
+    main.innerHTML = account();
+    if (accountTab === "orders" && state.user) {
+      api("/api/orders")
+        .then((o) => {
+          if ($("#orders"))
+            $("#orders").innerHTML = o.length
+              ? o.map(orderCard).join("")
+              : empty(
+                  "No orders yet",
+                  "Your purchases and delivery updates will appear here.",
+                );
+        })
+        .catch((e) => {
+          if ($("#orders")) $("#orders").textContent = e.message;
+        });
+    }
+    if (page === "checkout") checkout();
+  } else if (page === "gifting")
+    main.innerHTML = `<div class="inside">${crumbs("Gifting guide")}${intro("FOR SOMEONE SPECIAL", "The gifting guide", "Choose a gift for their favourite kind of evening.")}<div class="category-grid">${cats().map(catCard).join("")}</div><section class="cross-section">${head("CURATED GIFTS", "Made for <em>two</em>")}<div class="product-grid">${state.products
+      .filter((p) => p.category === "gifts")
+      .map(card)
+      .join("")}</div></section></div>`;
+  else if (page === "offers")
+    main.innerHTML = `<div class="inside">${crumbs("Offers")}${intro("THE BOUTIQUE", "Offers")}${s.coupon ? `<h3>${esc(s.discount)}% off your order</h3><p>Enter <b>${esc(s.coupon)}</b> in your bag.</p>` : "<p>There are no current promotions.</p>"}<p class="action-row">${link("/shop", "Shop the collection", "btn")}</p></div>`;
+  else if (page === "info") {
+    const titles = {
+        shipping: "Shipping & delivery",
+        returns: "Returns & exchanges",
+        story: "Our story",
+        contact: "Contact us",
+      },
+      k = route[2];
+    main.innerHTML = `<div class="inside">${crumbs(titles[k] || "Store information")}${intro("GO WINKS", titles[k] || "Store information")}<p class="policy">${esc(titles[k] ? s[k] : "")}</p>${k === "contact" ? '<button class="btn action-row" data-act="help">Message the store</button>' : ""}</div>`;
+  } else if (page === "manage") {
+    manage({
+      state,
+      api,
+      esc,
+      fmt,
+      main,
+      intro,
+      crumbs,
+      open,
+      close,
+      refresh,
+      toast,
+      tab: adminTab,
+      setTab: (t) => {
+        adminTab = t;
+        render();
+      },
+      render,
+      orderCard,
+      field,
+    });
+  } else
+    main.innerHTML =
+      '<div class="inside">' +
+      empty("Page not found", "Browse the boutique to continue.") +
+      "</div>";
+  document.title =
+    (page === "product"
+      ? product(route[2])?.name
+      : page === "shop"
+        ? category(route[2])?.name || "Shop all"
+        : {
+            wishlist: "Wishlist",
+            manage: "Store management",
+            account: "My account",
+            gifting: "Gifting guide",
+          }[page] || "The Couples’ Boutique") + " | Go Winks";
+}
+window.addEventListener("hashchange", () => {
+  close();
+  quantity = 1;
+  render();
+  scrollTo(0, 0);
 });
-header();footer();render();
-refresh().then(()=>{render()}).catch(()=>{loadFailed=true;toast("Live stock is unavailable. Please refresh before checking out.")});
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("button,a");
+  if (!el) return;
+  if (el.tagName === "A" && el.getAttribute("href")?.startsWith("#")) {
+    if (el.getAttribute("href") === "#" + hash()) close();
+    return;
+  }
+  if (el.hasAttribute("data-slide")) {
+    slide = Number(el.dataset.slide);
+    $(".hero").outerHTML = hero();
+    return;
+  }
+  if (el.dataset.heart) {
+    await toggleHeart(el.dataset.heart);
+    return;
+  }
+  if (el.dataset.resume) {
+    try {
+      const r = await api("/api/resume", { id: el.dataset.resume });
+      await launchPayment(r.order, r.key);
+    } catch (e) {
+      toast(e.message);
+    }
+    return;
+  }
+  if (el.dataset.add) {
+    changeBag(el.dataset.add, (bag[el.dataset.add] || 0) + quantity);
+    return;
+  }
+  if (el.dataset.remove) {
+    changeBag(el.dataset.remove, 0);
+    return;
+  }
+  if (el.dataset.step) {
+    const n = Number(el.dataset.step),
+      id = el.dataset.id;
+    if (id === "detail") {
+      quantity = Math.max(
+        1,
+        Math.min(
+          quantity + n,
+          Math.min(10, product(hash().split("/")[2])?.available || 1),
+        ),
+      );
+      render();
+    } else changeBag(id, (bag[id] || 0) + n);
+    return;
+  }
+  if (el.dataset.accountTab) {
+    accountTab = el.dataset.accountTab;
+    render();
+    return;
+  }
+  switch (el.dataset.act) {
+    case "menu":
+      open(
+        "Explore Go Winks",
+        link("/shop", "Shop all", "menu-link") +
+          cats()
+            .map((c) => link("/shop/" + c.id, esc(c.name), "menu-link"))
+            .join("") +
+          link("/gifting", "Gifting guide", "menu-link") +
+          link("/account", "My account", "menu-link") +
+          link("/offers", "Offers", "menu-link"),
+      );
+      break;
+    case "search":
+      search();
+      break;
+    case "bag":
+      showBag();
+      break;
+    case "wishlist":
+      goto("/wishlist");
+      break;
+    case "checkout":
+      checkout();
+      break;
+    case "account":
+      state.user ? goto("/account") : auth();
+      break;
+    case "login":
+      auth();
+      break;
+    case "register":
+      auth(true);
+      break;
+    case "help":
+      accountTab = "help";
+      if (state.user) goto("/account");
+      else {
+        returnAfterAuth = "/account";
+        auth();
+      }
+      break;
+    case "logout":
+      if (state.hosted) {
+        window.top.location.href = "/signout-with-chatgpt?return_to=/";
+        return;
+      }
+      await api("/api/auth/logout", {});
+      await refresh();
+      goto("/");
+      toast("Signed out");
+      break;
+  }
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "search-input")
+    $("#results").innerHTML = searchResults(e.target.value);
+  if (e.target.id === "gift-note") {
+    giftNote = e.target.value;
+    save("note", giftNote);
+  }
+});
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (el.id === "collection-filter")
+    goto("/shop" + (el.value ? "/" + el.value : ""));
+  if (el.id === "price-filter") {
+    filters.range = el.value;
+    render();
+  }
+  if (el.id === "sort") {
+    filters.sort = el.value;
+    render();
+  }
+  if (el.id === "stock-filter") {
+    filters.stock = el.checked;
+    render();
+  }
+});
+document.addEventListener("submit", async (e) => {
+  const f = e.target;
+  if (
+    ![
+      "search-form",
+      "coupon-form",
+      "auth-form",
+      "profile-form",
+      "help-form",
+      "checkout-form",
+    ].includes(f.id)
+  )
+    return;
+  e.preventDefault();
+  const values = Object.fromEntries(new FormData(f)),
+    btn = f.querySelector('button:not([type="button"])'),
+    feedback = f.querySelector(".feedback");
+  if (btn) btn.disabled = true;
+  if (feedback) feedback.textContent = "";
+  try {
+    if (f.id === "search-form") {
+      goto("/shop?q=" + encodeURIComponent($("#search-input").value.trim()));
+      return;
+    }
+    if (f.id === "coupon-form") {
+      const c = values.code.trim().toUpperCase();
+      if (c && c !== state.settings.coupon) {
+        $("#coupon-feedback").textContent = "This offer code is not valid.";
+        return;
+      }
+      coupon = c;
+      save("coupon", c);
+      sessionStorage.removeItem("gw.checkout");
+      showBag();
+      $("#coupon-feedback").textContent = c
+        ? "Offer applied."
+        : "Offer removed.";
+      return;
+    }
+    if (f.id === "auth-form") {
+      await api("/api/auth/" + f.dataset.mode, values);
+      await refresh();
+      if (guestWishlist.length) {
+        const next = [...new Set([...state.user.wishlist, ...guestWishlist])];
+        await api("/api/profile", { wishlist: next });
+        state.user.wishlist = next;
+        guestWishlist = [];
+        save("wishlist", []);
+      }
+      const dest = returnAfterAuth || "/account";
+      returnAfterAuth = "";
+      goto(dest);
+      return;
+    }
+    if (f.id === "profile-form") {
+      const u = await api("/api/profile", values);
+      state.user = { ...state.user, ...u };
+      feedback.textContent = "Your profile has been saved.";
+      return;
+    }
+    if (f.id === "help-form") {
+      await api("/api/contact", values);
+      f.reset();
+      feedback.textContent = "Your message has been sent to the store team.";
+      return;
+    }
+    if (f.id === "checkout-form") await pay(f);
+  } catch (err) {
+    if (feedback) feedback.textContent = err.message;
+    else toast(err.message);
+  } finally {
+    if (btn && btn.isConnected) btn.disabled = false;
+  }
+});
+header();
+footer();
+render();
+refresh()
+  .then(() => {
+    render();
+  })
+  .catch(() => {
+    loadFailed = true;
+    toast("Live stock is unavailable. Please refresh before checking out.");
+  });
