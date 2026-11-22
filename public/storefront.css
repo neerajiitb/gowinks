@@ -1,4 +1,12 @@
 @font-face {
+  font-family: Kalnia;
+  src: url("/fonts/Kalnia.ttf") format("truetype");
+  font-weight: 100 700;
+  font-stretch: 100% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: Mulish;
   src: url("/fonts/Mulish-400.woff2") format("woff2");
   font-weight: 400;
@@ -25,7 +33,7 @@
   --muted: #657383;
   --line: #dde2e7;
   --sans: Mulish, Arial, sans-serif;
-  --serif: Georgia, "Times New Roman", serif;
+  --serif: Kalnia, Georgia, "Times New Roman", serif;
   --film-base: #7d231e;
 }
 [hidden] {
@@ -67,9 +75,10 @@ body {
   color: #011e38;
   flex: none;
 }
-.gw-brand span {
-  font: 700 clamp(24px, 2.3vw, 37px) / 1 var(--sans);
-  letter-spacing: 0.12em;
+.gw-wordmark {
+  width: clamp(154px, 15.4vw, 226px);
+  height: auto;
+  object-fit: contain;
 }
 .gw-brand .gw-sigil {
   width: 52px;
@@ -364,12 +373,11 @@ body {
   margin: 0;
   text-align: center;
   padding: 12px 15px;
-  font: 400 clamp(28px, 2.45vw, 48px) / 1.12 var(--serif);
-  letter-spacing: 0.01em;
+  font: 430 clamp(28px, 2.45vw, 48px) / 1.18 var(--serif);
+  letter-spacing: -0.035em;
 }
 .category-stage > h2 {
   color: white;
-  font-style: italic;
 }
 .mosaic {
   display: grid;
@@ -682,8 +690,8 @@ body {
   padding: 17px 5%;
   font-size: 12px;
 }
-.retail-credit .gw-brand span {
-  font-size: 20px;
+.retail-credit .gw-wordmark {
+  width: 124px;
 }
 .retail-credit .gw-sigil {
   width: 31px;
@@ -780,8 +788,8 @@ dialog[open]::backdrop {
   .shop-mast > .gw-brand {
     width: 205px;
   }
-  .gw-brand span {
-    font-size: 23px;
+  .shop-mast .gw-wordmark {
+    width: 140px;
   }
   .shop-tool {
     font-size: 10px;
@@ -807,9 +815,8 @@ dialog[open]::backdrop {
     width: auto;
     gap: 7px;
   }
-  .shop-mast .gw-brand span {
-    font-size: 20px;
-    letter-spacing: 0.09em;
+  .shop-mast .gw-wordmark {
+    width: 132px;
   }
   .shop-mast .gw-sigil {
     width: 33px;

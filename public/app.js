@@ -77,7 +77,7 @@ const link = (route, text, cls = "") =>
 const brand = () =>
   link(
     "/",
-    '<img class="gw-sigil" src="/monogram.svg" alt=""><span>GO WINKS</span>',
+    '<img class="gw-sigil" src="/monogram.svg" alt=""><img class="gw-wordmark" src="/wordmark.svg" alt="Go Winks">',
     "gw-brand",
   );
 const hash = () => location.hash.slice(1) || "/",
