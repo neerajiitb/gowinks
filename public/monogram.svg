@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><g fill="#011e38"><path d="M31 5C18 5 7 14 5 26 2 42 10 52 21 54c6 1 11-1 15-4l1-13h-9l-1 12c-1 4-7 5-10 1-4-5-5-14-3-24C17 13 22 7 30 7c5 0 7 4 6 8l7-4C40 7 36 5 31 5Z"/><path d="M24 17c8 1 11 5 12 11l3 13 4-12-1-5c-1-3-3-6-5-7 6 0 11 4 12 10l2 12 5-22h3l-9 35h-3l-4-18-7 18h-3l-6-26c-1-5-2-7-5-9Z"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 110" role="img" aria-label="Go Winks intertwined emblem">
+  <defs>
+    <linearGradient id="back" x1="0" x2=".97" y1="0" y2=".76" gradientUnits="objectBoundingBox">
+      <stop stop-color="#ffca85"/><stop offset=".35" stop-color="#ed754d"/><stop offset=".7" stop-color="#ff8d85"/><stop offset="1" stop-color="#ee424e"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" x2="1" y1=".25" y2=".56">
+      <stop stop-color="#ffd98d"/><stop offset=".35" stop-color="#ffba71"/><stop offset=".63" stop-color="#ff8a69"/><stop offset="1" stop-color="#ff545e"/>
+    </linearGradient>
+    <radialGradient id="gold" cx=".38" cy=".24" r=".8"><stop stop-color="#fff8b9"/><stop offset=".45" stop-color="#ffdb7b"/><stop offset="1" stop-color="#f18a44"/></radialGradient>
+    <radialGradient id="rose" cx=".4" cy=".23" r=".82"><stop stop-color="#ffb9b1"/><stop offset=".5" stop-color="#ff756e"/><stop offset="1" stop-color="#ed3541"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="2.2"/></filter>
+    <path id="right" d="M63 44 C79 50 86 75 99 86 C117 102 133 84 144 47"/>
+    <path id="left" d="M16 47 C23 85 42 101 58 83 C75 65 81 50 102 44"/>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#right" stroke="#bf4249" stroke-width="30" transform="translate(0 1.3)"/>
+    <use href="#right" stroke="url(#back)" stroke-width="30"/>
+    <use href="#right" transform="translate(-1 -6)" stroke="#ffe6c1" opacity=".37" stroke-width="5" filter="url(#soft)"/>
+    <use href="#left" stroke="#c45c41" stroke-width="30" transform="translate(0 1.3)"/>
+    <use href="#left" stroke="url(#front)" stroke-width="30"/>
+    <use href="#left" transform="translate(-1 -6)" stroke="#ffedbf" opacity=".42" stroke-width="5" filter="url(#soft)"/>
+  </g>
+  <circle cx="62" cy="12" r="11" fill="url(#gold)"/>
+  <circle cx="102" cy="12" r="11" fill="url(#rose)"/>
+</svg>

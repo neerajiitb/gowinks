@@ -6,7 +6,7 @@
   --gold: #a68155;
   --muted: #74666a;
   --line: #e4d8d4;
-  --serif: "Cormorant Garamond", Georgia, serif;
+  --display: "Cormorant Garamond", Georgia, serif;
   --sans: "DM Sans", Arial, sans-serif;
 }
 * {
@@ -48,7 +48,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #a86948;
+  outline: 2px solid #c25764;
   outline-offset: 3px;
 }
 img {
@@ -67,7 +67,7 @@ h1,
 h2,
 h3,
 .serif {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 500;
   line-height: 1.04;
 }
@@ -82,7 +82,7 @@ h3 {
   font-size: 28px;
 }
 em {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 400;
 }
 .glyph {
@@ -133,7 +133,7 @@ header {
   margin: auto;
 }
 .brand {
-  font: 500 51px/0.95 var(--serif);
+  font: 500 51px/0.95 var(--display);
   letter-spacing: -3.4px;
   color: var(--wine);
   position: relative;
@@ -774,7 +774,7 @@ body:has(dialog[open]) {
   font-size: 39px;
 }
 .close {
-  font: 33px/1 var(--serif);
+  font: 33px/1 var(--display);
 }
 #dialog-body p {
   margin: 10px 0;
@@ -848,7 +848,7 @@ body:has(dialog[open]) {
   display: block;
   width: 100%;
   text-align: left;
-  font: 25px var(--serif);
+  font: 25px var(--display);
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }

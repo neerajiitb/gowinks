@@ -49,4 +49,4 @@ The server calculates totals and reserves stock atomically before opening a prov
 
 [Payment integration](https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/) · [Webhook validation](https://razorpay.com/docs/webhooks/validate-test/) · [Shiprocket API](https://apidocs.shiprocket.in/)
 
-The locally bundled DM Sans, Cormorant Garamond and Kalnia fonts are distributed with their SIL Open Font License files in public/fonts.
+The locally bundled Quicksand, DM Sans, Mulish, Cormorant Garamond and Kalnia fonts are distributed with their SIL Open Font License files in public/fonts.

@@ -591,7 +591,7 @@ async function launchPayment(order, key) {
       email: order.email,
       contact: order.address.phone,
     },
-    theme: { color: "#53182e" },
+    theme: { color: "#39104e" },
     modal: {
       ondismiss: () => {
         accountTab = "orders";
