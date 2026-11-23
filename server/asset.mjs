@@ -3,10 +3,11 @@ export function assetResponse(request, type, bytes) {
   const headers = {
     "content-type": type,
     "x-content-type-options": "nosniff",
-    "cache-control": /^(image|font|video)\//.test(type)
-      ? "public, max-age=3600"
-      : "no-cache",
+    "cache-control": "no-cache",
   };
+  if (type === "text/html") headers["cache-control"] = "no-store";
+  if (type === "image/webp" || type === "video/mp4")
+    headers["cache-control"] = "public, max-age=3600";
   let status = 200;
   if (type === "video/mp4") {
     headers["accept-ranges"] = "bytes";

@@ -25,6 +25,20 @@ async function collect(dir) {
   }
 }
 await collect("public");
+// A release-specific URL also invalidates cached dependencies of app.js and CSS.
+const release = execFileSync("git", ["rev-parse", "--short=12", "HEAD"], {
+  encoding: "utf8",
+}).trim();
+const localUiAsset = /(["'])(\.?\/[\w./-]+\.(?:css|js|svg|ttf|woff2))\1/g;
+for (const [pathname, asset] of Object.entries(files)) {
+  if (!/\.(?:html|css|js)$/.test(pathname)) continue;
+  const source = Buffer.from(asset[1], "base64").toString("utf8");
+  const versioned = source.replace(localUiAsset, (match, quote, url) => {
+    const target = path.posix.resolve(path.posix.dirname(pathname), url);
+    return Object.hasOwn(files, target) ? `${quote}${url}?v=${release}${quote}` : match;
+  });
+  asset[1] = Buffer.from(versioned).toString("base64");
+}
 const sourceZip = execFileSync(
   "git",
   ["archive", "--format=zip", "--prefix=go-winks/", "HEAD"],
