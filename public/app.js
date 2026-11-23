@@ -1,3 +1,4 @@
+import { createShopMotion } from "./motion.js";
 import { darkToken, darkProduct, mountDark, inDark, leaveDark, stopDarkFilms } from "./after-dark.js";
 import { mountExperiences } from "./experiences.js";
 import { activityCheckout, activityGift, ownedPassInfo, receivedPassCard } from "./activity-passes.js";
@@ -241,6 +242,7 @@ function setCampaign(index) {
   [...rail.children].forEach((el, i) => (el.inert = i !== campaignIndex));
 }
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+const motion = createShopMotion(reduced);
 function syncFilm() {
   const film = $(".film video"),
     control = $(".film-control");
@@ -418,7 +420,7 @@ function detail(id) {
         : []),
     ],
     g = gallery[galleryIndex] || gallery[0];
-  return `<div class="pdp">${crumbs((c?.name || "Products") + " / " + p.name)}<div class="pdp-body"><div class="pdp-gallery"><div class="pd-main ${g.zoom ? "zoomed" : ""}"><img src="${esc(g.src)}" alt="${esc(p.name + " · " + g.label)}"><button class="heart-btn ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button></div><div class="thumbs">${gallery.map((v, i) => `<button data-gallery="${i}" class="${i === galleryIndex ? "chosen" : ""} ${v.zoom ? "zoomed" : ""}" aria-label="${esc(v.label)}" aria-pressed="${i === galleryIndex}"><img src="${esc(v.src)}" alt=""></button>`).join("")}</div></div><div class="pdp-info"><h1>${esc(p.name)}</h1><p>From ${link("/shop/" + p.category, esc(c?.name || "Go Winks"))}</p><div class="pd-prices"><div><strong>${fmt(p.price)}</strong><small>MRP inclusive of all taxes</small></div><div><b>${p.available ? "In stock" : "Sold out"}</b><small>${esc(c?.short || "Go Winks")}</small></div></div><div class="delivery-panel"><b>${icon("truck")} Delivery information</b><p>${esc(state.settings.announcement)}</p><details><summary>Shipping & packaging</summary><p>${esc(state.settings.shipping)}</p></details></div><p class="pd-description">${esc(p.detail)}</p><details class="pd-spec"><summary>Product details</summary><p>${esc(p.spec)}</p></details><details class="pd-spec"><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details><div class="pd-quantity"><span>Quantity</span>${stepper("detail", quantity)}</div><div class="pd-buy"><button data-buy="${esc(id)}" ${p.available ? "" : "disabled"}>BUY NOW</button><button data-add="${esc(id)}" ${p.available ? "" : "disabled"}>ADD TO BAG</button></div><div class="pd-service">${[
+  return `<div class="pdp">${crumbs((c?.name || "Products") + " / " + p.name)}<div class="pdp-body"><div class="pdp-gallery"><div class="pd-main ${g.zoom ? "zoomed" : ""}"><img src="${esc(g.src)}" alt="${esc(p.name + " · " + g.label)}"><button class="heart-btn ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-pressed="${wishlist().includes(id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button></div><div class="thumbs">${gallery.map((v, i) => `<button data-gallery="${i}" class="${i === galleryIndex ? "chosen" : ""} ${v.zoom ? "zoomed" : ""}" aria-label="${esc(v.label)}" aria-pressed="${i === galleryIndex}"><img src="${esc(v.src)}" alt=""></button>`).join("")}</div></div><div class="pdp-info"><h1>${esc(p.name)}</h1><p>From ${link("/shop/" + p.category, esc(c?.name || "Go Winks"))}</p><div class="pd-prices"><div><strong>${fmt(p.price)}</strong><small>MRP inclusive of all taxes</small></div><div><b>${p.available ? "In stock" : "Sold out"}</b><small>${esc(c?.short || "Go Winks")}</small></div></div><div class="delivery-panel"><b>${icon("truck")} Delivery information</b><p>${esc(state.settings.announcement)}</p><details><summary>Shipping & packaging</summary><p>${esc(state.settings.shipping)}</p></details></div><p class="pd-description">${esc(p.detail)}</p><details class="pd-spec"><summary>Product details</summary><p>${esc(p.spec)}</p></details><details class="pd-spec"><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details><div class="pd-quantity"><span>Quantity</span>${stepper("detail", quantity)}</div><div class="pd-buy"><button data-buy="${esc(id)}" ${p.available ? "" : "disabled"}>BUY NOW</button><button data-add="${esc(id)}" ${p.available ? "" : "disabled"}>ADD TO BAG</button></div><div class="pd-service">${[
     ["box", "Discreet packaging"],
     ["gift", "Gift notes"],
     ["lock", "Secure checkout"],
@@ -479,7 +481,8 @@ function changeBag(id, q) {
   header();
   showBag();
 }
-async function toggleHeart(id) {
+async function toggleHeart(button) {
+  const id = button.dataset.heart;
   const current = wishlist(),
     next = current.includes(id)
       ? current.filter((x) => x !== id)
@@ -492,10 +495,17 @@ async function toggleHeart(id) {
       guestWishlist = next;
       save("wishlist", next);
     }
-    render();
-    toast(
-      next.includes(id) ? "Saved to your wishlist" : "Removed from wishlist",
-    );
+    const saved = next.includes(id);
+    if (!saved && hash() === "/wishlist") render();
+    else {
+      for (const heart of document.querySelectorAll("[data-heart]")) {
+        if (heart.dataset.heart !== id) continue;
+        heart.classList.toggle("selected", saved);
+        heart.setAttribute("aria-pressed", String(saved));
+        heart.classList.toggle("saved-pulse", saved && heart === button);
+      }
+    }
+    toast(saved ? "Saved to your wishlist" : "Removed from wishlist");
   } catch (e) {
     toast(e.message);
   }
@@ -799,17 +809,21 @@ window.addEventListener("hashchange", () => {
   galleryIndex = 0;
   render();
   scrollTo(0, 0);
+  motion.enter($("#main"), location.hash);
 });
 document.addEventListener("click", async (e) => {
   const el = e.target.closest("button,a");
   if (!el) return;
   if (el.tagName === "A" && el.getAttribute("href")?.startsWith("#")) {
+    motion.rememberProduct(el, e);
     if (el.getAttribute("href") === "#" + hash()) close();
     return;
   }
   if (el.hasAttribute("data-gallery")) {
+    if (galleryIndex === Number(el.dataset.gallery)) return;
     galleryIndex = Number(el.dataset.gallery);
     render();
+    motion.changePhoto($(".pd-main img"));
     return;
   }
   if (el.hasAttribute("data-plp-range")) {
@@ -845,7 +859,7 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (el.dataset.heart) {
-    await toggleHeart(el.dataset.heart);
+    await toggleHeart(el);
     return;
   }
   if (el.dataset.resume) {

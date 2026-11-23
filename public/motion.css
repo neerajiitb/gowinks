@@ -1,0 +1,72 @@
+@media (prefers-reduced-motion: no-preference) {
+  /* Independent scale leaves the dock, gallery zoom and carousel transforms intact. */
+  :where(.btn, .shop-tool, .heart-btn, .pd-buy button, .rec-tools button, .thumbs button,
+    .xp-thumbs button, .account-tabs button, .ad-solid, .ad-outline, .ad-normal, .retail-tile,
+    .xp-card, .pimage, .dock-emblem) {
+    transition-property: scale;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(.2,.8,.25,1);
+  }
+  :is(.btn, .shop-tool, .heart-btn, .pd-buy button, .rec-tools button, .thumbs button,
+    .xp-thumbs button, .account-tabs button, .ad-solid, .ad-outline, .ad-normal, .pimage,
+    .retail-tile, .xp-card, .dock-emblem):not(:disabled):active {
+    scale: .965;
+    transition-duration: 65ms;
+  }
+  :is(.retail-tile, .pimage, .xp-card):not(:disabled):active { scale: .985; }
+  .heart-btn.saved-pulse > svg { animation: wink-beat 400ms ease-out; }
+  .heart-btn.saved-pulse::before, .heart-btn.saved-pulse::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    width: 11px;
+    height: 11px;
+    left: 50%;
+    top: 38%;
+    background: var(--coral);
+    clip-path: polygon(50% 93%, 8% 49%, 1% 31%, 6% 14%, 21% 5%, 38% 7%, 50% 20%, 62% 7%, 79% 5%, 94% 14%, 99% 31%, 92% 49%);
+    --drift: -14px;
+    --rise: -22px;
+    --turn: -17deg;
+    opacity: 0;
+    animation: paired-hearts 570ms ease-out;
+  }
+  .heart-btn.saved-pulse::after {
+    width: 8px;
+    height: 8px;
+    --drift: 8px;
+    --rise: -16px;
+    --turn: 16deg;
+    animation-delay: 45ms;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .nav-parent { position: relative; }
+  .nav-parent::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 20%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 180ms ease-out;
+  }
+  .nav-parent:is(:hover, :focus-visible)::after { transform: scaleX(1); }
+}
+
+@keyframes wink-beat {
+  0% { scale: .88; }
+  45% { scale: 1.22; }
+  75% { scale: .98; }
+  100% { scale: 1; }
+}
+@keyframes paired-hearts {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(.55); }
+  24% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift), var(--rise)) rotate(var(--turn)) scale(.85); }
+}
