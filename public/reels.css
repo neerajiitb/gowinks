@@ -1,0 +1,52 @@
+.watch-shop {
+  padding: 22px clamp(20px, 5vw, 84px) 40px;
+  background: var(--paper);
+  color: var(--wine);
+}
+.watch-shop h2 {
+  text-align: center;
+  font: 650 clamp(28px, 3.35vw, 48px)/1.18 var(--display);
+  letter-spacing: -.035em;
+}
+.reels-frame { position: relative; max-width: 1600px; margin: 40px auto 0; }
+.reels-track {
+  display: flex; gap: 24px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent; padding: 0 0 8px;
+}
+.shop-reel { min-width: 0; flex: 0 0 calc((100% - 72px) / 4); scroll-snap-align: start; }
+.shop-reel video {
+  display: block; width: 100%; aspect-ratio: 4 / 6.3; object-fit: cover;
+  border-radius: 16px; background: var(--wine);
+}
+.shop-reel-product {
+  display: flex; align-items: center; gap: 12px; min-height: 48px; margin-top: 20px;
+  font: 600 1rem/1.35 var(--sans); color: var(--ink);
+}
+.shop-reel-product img { width: 46px; height: 46px; object-fit: cover; border-radius: 6px; }
+.shop-reel-product strong { flex: 1; }
+.shop-reel-product:hover strong { text-decoration: underline; }
+.shop-reel-product .glyph { width: 17px; }
+.reels-previous,.reels-next {
+  position: absolute; top: 40%; background: var(--paper); color: var(--wine); border: 1px solid var(--line);
+  border-radius: 50%; width: 42px; height: 42px; display: grid; place-items: center;
+  box-shadow: 0 3px 12px #301d3522;
+}
+.reels-previous { left: -18px; }
+.reels-next { right: -18px; }
+.reels-frame button:disabled { visibility: hidden; }
+@media (max-width: 999px) {
+  .reels-frame { margin-top: 24px; }
+  .reels-track { gap: 20px; }
+  .shop-reel { flex-basis: 40.33%; }
+}
+@media (max-width: 699px) {
+  .watch-shop { padding: 48px 0 24px; }
+  .watch-shop h2 { font-size: 26px; }
+  .reels-track { gap: 14px; padding-inline: 16px; scroll-padding-inline: 16px; }
+  .shop-reel { flex-basis: 65%; }
+  .shop-reel video { aspect-ratio: 4 / 4.88; }
+  .shop-reel-product { margin-top: 10px; gap: 8px; font-size: 14px; }
+  .reels-previous,.reels-next { display: none; }
+}
+.reels-track.dragging { scroll-snap-type: none; user-select: none; cursor: grabbing; }

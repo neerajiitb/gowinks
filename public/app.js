@@ -1,6 +1,10 @@
+import { mountExperiences } from "./experiences.js";
+import { activityCheckout, activityGift, ownedPassInfo, receivedPassCard } from "./activity-passes.js";
+import { watchShop, mountReels } from "./reels.js";
 import { settings as defaults, products as samples } from "./catalog.js";
 import { icon } from "./icons.js";
 import { manage } from "./manage.js";
+import { renderInvitations } from "./invitations.js";
 const $ = (s) => document.querySelector(s);
 export const esc = (v) =>
   String(v ?? "").replace(
@@ -112,14 +116,14 @@ function header() {
    state.settings.heroImage,
  )}${cats()
    .map((c) => menu(c.name, "/shop/" + c.id, groupLinks(c), c.image))
-   .join("")}<div class="nav-right">${menu(
+   .join("")}<div class="nav-right">${link("/experiences", "GoWings Experience", "nav-parent")}${menu(
    "Gifts",
    "/gifting",
    editList()
      .map((e) => link("/edit/" + e.id, esc(e.name)))
      .join(""),
    editList()[1]?.image || state.settings.heroImage,
- )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>`;
+ )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? link("/experiences", "GoWings Experience " + icon("right"), "xp-mobile-entry") : ""}`;
   let dock = $("#mobile-dock");
   if (!dock) {
     dock = document.createElement("nav");
@@ -132,7 +136,7 @@ function header() {
 }
 function footer() {
   $("#footer").innerHTML =
-    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
+    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/experiences", "GoWings Experience")}${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
       .map((c) => link("/shop/" + c.id, esc(c.name)))
       .join(
         "",
@@ -211,6 +215,7 @@ function home() {
   return (
     hero() +
     `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
+ ${watchShop(s, state.products, esc)}
  ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
  <section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
    .slice(0, 4)
@@ -247,7 +252,10 @@ function syncFilm() {
     play ? "Pause campaign film" : "Play campaign film",
   );
 }
+let unmountReels;
 function syncHome() {
+  unmountReels?.();
+  unmountReels = mountReels($(".watch-shop"), reduced);
   clearInterval(deckTimer);
   const film = $(".film video");
   if (film) syncFilm();
@@ -605,13 +613,17 @@ async function launchPayment(order, key) {
           payment: response.razorpay_payment_id,
           signature: response.razorpay_signature,
         });
-        bag = {};
-        coupon = "";
-        giftNote = "";
-        save("bag", bag);
-        save("coupon", "");
-        save("note", "");
-        sessionStorage.removeItem("gw.checkout");
+        if (order.fulfillment === "activity") {
+          sessionStorage.removeItem("gw.activityCheckout");
+        } else {
+          bag = {};
+          coupon = "";
+          giftNote = "";
+          save("bag", bag);
+          save("coupon", "");
+          save("note", "");
+          sessionStorage.removeItem("gw.checkout");
+        }
         await refresh();
         accountTab = "orders";
         goto("/account");
@@ -625,7 +637,7 @@ async function launchPayment(order, key) {
   }).open();
 }
 const orderCard = (o) =>
-  `<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map((i) => `<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${o.tracking ? "<p>Tracking: " + esc(o.tracking.courier) + " " + esc(o.tracking.awb) + " · " + esc(o.tracking.status) + "</p>" : ""}${o.status === "Awaiting payment" && o.userId === state.user?.id ? '<button class="text-link" data-resume="' + esc(o.id) + '">Resume payment</button>' : ""}${o.note ? "<p>Gift note: " + esc(o.note) + "</p>" : ""}</article>`;
+  `<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map((i) => `<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${ownedPassInfo(o, state.user, esc)}${o.tracking ? "<p>Tracking: " + esc(o.tracking.courier) + " " + esc(o.tracking.awb) + " · " + esc(o.tracking.status) + "</p>" : ""}${o.status === "Awaiting payment" && o.userId === state.user?.id ? '<button class="text-link" data-resume="' + esc(o.id) + '">Resume payment</button>' : ""}${o.note ? "<p>Gift note: " + esc(o.note) + "</p>" : ""}</article>`;
 function account() {
   const u = state.user;
   if (!u)
@@ -643,7 +655,7 @@ function account() {
     ["orders", "Orders"],
     ["help", "Contact the store"],
   ];
-  return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
+  return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${link("/invites", "My invitations", "text-link")}${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
 }
 function render() {
   const route = hash().split("?")[0].split("/"),
@@ -652,6 +664,23 @@ function render() {
     s = state.settings;
   header();
   if (!page) main.innerHTML = home();
+  else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
+    main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
+      (loadFailed ? 'Could not load experiences. Refresh to try again.' : 'Loading GoWings Experience…') + '</section>';
+  else if (page === "activity-checkout" || page === "activity-gift") {
+    const ctx = { state, main, esc, fmt, field, api, launchPayment,
+      login: () => { returnAfterAuth = hash(); auth(); },
+    };
+    if (page === "activity-gift") activityGift(ctx, route[2] || "");
+    else activityCheckout(ctx, route[2], route[3] === "gift");
+  }
+  else if (page === "experiences") mountExperiences(main, state.experiences || [], route[2], { esc, fmt });
+  else if (page === "invite" || page === "invites") {
+    renderInvitations({ main, route, state, esc, api, signIn: () => {
+      returnAfterAuth = hash();
+      auth();
+    } });
+  }
   else if (page === "shop") main.innerHTML = shop(route);
   else if (page === "edit") {
     const e = editList().find((e) => e.id === route[2]);
@@ -676,19 +705,16 @@ function render() {
   } else if (page === "account" || page === "checkout") {
     main.innerHTML = account();
     if (accountTab === "orders" && state.user) {
-      api("/api/orders")
-        .then((o) => {
-          if ($("#orders"))
-            $("#orders").innerHTML = o.length
-              ? o.map(orderCard).join("")
-              : empty(
-                  "No orders yet",
-                  "Your purchases and delivery updates will appear here.",
-                );
+      const container = $("#orders");
+      Promise.all([api("/api/orders"), api("/api/activity-gifts")])
+        .then(([orders, gifts]) => {
+          if (!container.isConnected) return;
+          const received = gifts.length
+            ? "<h3>Gifts received</h3>" + gifts.map(p => receivedPassCard(p, esc)).join("") : "";
+          container.innerHTML = orders.map(orderCard).join("") + received ||
+            empty("No orders yet", "Your purchases and delivery updates will appear here.");
         })
-        .catch((e) => {
-          if ($("#orders")) $("#orders").textContent = e.message;
-        });
+        .catch((e) => { container.textContent = e.message; });
     }
     if (page === "checkout") checkout();
   } else if (page === "gifting")
@@ -741,6 +767,9 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
+            experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWings Experience",
+            invite: "Experience invitation",
+            invites: "My invitations",
             wishlist: "Wishlist",
             manage: "Store management",
             account: "My account",
@@ -920,6 +949,7 @@ document.addEventListener("click", async (e) => {
           cats()
             .map((c) => link("/shop/" + c.id, esc(c.name), "menu-link"))
             .join("") +
+          link("/experiences", "GoWings Experience", "menu-link") +
           link("/gifting", "Gifting guide", "menu-link") +
           link("/account", "My account", "menu-link") +
           link("/offers", "Offers", "menu-link"),
@@ -1079,6 +1109,7 @@ refresh()
   })
   .catch(() => {
     loadFailed = true;
+    render();
     toast("Live stock is unavailable. Please refresh before checking out.");
   });
 

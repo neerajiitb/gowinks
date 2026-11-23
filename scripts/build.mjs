@@ -64,9 +64,9 @@ const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
 const worker =
   assetHelper +
   "\n" +
-  "const {initialProducts,initialSettings}=(()=>{" +
+  "const {initialProducts,initialExperiences,initialSettings}=(()=>{" +
   catalog +
-  "\nreturn {initialProducts:products,initialSettings:settings}})();\n" +
+  "\nreturn {initialProducts:products,initialExperiences:experiences,initialSettings:settings}})();\n" +
   api +
   "\nconst assets=" +
   JSON.stringify(files) +

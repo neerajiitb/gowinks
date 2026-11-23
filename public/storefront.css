@@ -1550,3 +1550,49 @@ dialog[open]::backdrop {
     grid-column: span 4;
   }
 }
+
+.invite-page { min-height: 63vh; }
+.invite-wrap { max-width: 640px; margin: 0 auto; }
+.invite-wrap h1 { margin: 24px 0 10px; font-size: clamp(32px, 5vw, 54px); }
+.invite-wrap > p, .invite-wrap > .btn { margin: 12px 0 20px; }
+.invite-form { margin: 22px 0; }
+.invite-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 16px 0 24px; }
+.invite-postcard { background: var(--mast-gradient); color: var(--peach); border-radius: 20px; padding: clamp(24px, 6vw, 46px); margin: 22px 0; overflow-wrap: anywhere; }
+.invite-postcard h2 { margin: 13px 0; font-size: clamp(25px, 4vw, 38px); letter-spacing: -.03em; line-height: 1.12; }
+.invite-postcard p { margin: 12px 0; white-space: pre-wrap; }
+.invite-postcard small { font-size: .82rem; font-weight: 650; }
+.invite-listing { text-decoration: underline; text-underline-offset: .15em; }
+.invite-history { margin: 24px 0; }
+.invite-history h2 { font-size: 1.5rem; letter-spacing: -.03em; margin-bottom: 12px; }
+.invite-history > a { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 14px 0; }
+.invite-history small { display: block; color: var(--muted); }
+.invite-history span { color: var(--wine); font-weight: 650; }
+
+.activity-pass-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8edf1;
+  border-radius: 1rem;
+}
+.activity-pass-summary img {
+  width: clamp(4.5rem, 19vw, 7rem);
+  aspect-ratio: 1;
+  border-radius: .75rem;
+}
+.activity-pass-summary h2 {
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  letter-spacing: -.035em;
+}
+.activity-pass-summary p { color: var(--muted); }
+#activity-payment fieldset {
+  display: grid;
+  gap: .8rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+}
+#activity-payment legend { font-weight: 700; padding: 0 .35rem; }

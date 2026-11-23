@@ -33,6 +33,14 @@ With Compose, use `docker compose exec store node scripts/staff.mjs owner@exampl
 
 The private Sites edition uses the platform's authenticated identity and D1. Its owner account has administration access through a server-side setting. `npm run build` emits a self-contained Worker in `dist/server/index.js` and the database migration in `dist/drizzle/`.
 
+## Experiences and shoppable reels
+
+Open **GoWings Experience** from the storefront to browse activities, spots and stays. In **Store management → Experiences**, managers and admins can create and archive listings, edit city and mood filters, add photo and video URLs, and link an Instagram reel or a map. The four examples are previews with illustrative photography. For a real activity, set its price per couple, pass quantity and publication status. Stays and spots are discovery listings.
+
+Customers can send a private invitation link through their own WhatsApp app and track responses in **My invitations**. A recipient signs in, unlocks the invitation with the intended phone number, and accepts or declines. For paid gifts, the recipient signs in with the email chosen by the purchaser. Paid activity passes appear in order history for staff redemption and do not enter the shipping workflow.
+
+The homepage's **Watch & Shop** carousel appears after **Shop By Category**. Staff can assign the featured products, posters and videos, reorder them or remove them under **Store management → Reels**.
+
 ## Merchant setup
 
 The catalogue, prices, quantities, food details, product specifications, policies and parcel dimensions are sample merchandising content. Confirm these details against actual stock before accepting payments.

@@ -1,3 +1,4 @@
+import { manageExperiences } from "./manage-experiences.js";
 export async function manage(ctx) {
   const {
     state,
@@ -23,7 +24,7 @@ export async function manage(ctx) {
     main.innerHTML = `<section class="inside">${crumbs("Store management")}${intro("STORE TEAM", "Store management", u ? "This account does not have a store team role. Share your account ID with the store administrator to request access." : "Sign in with a store team account to manage Go Winks.")}${u ? '<a class="btn" href="#/account">View my profile</a>' : '<button class="btn" data-act="login">Sign in</button>'}</section>`;
     return;
   }
-  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "storefront", "collections", "edits", "campaigns", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
+  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "experiences", "storefront", "collections", "edits", "campaigns", "reels", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
   main
     .querySelectorAll("[data-tab]")
     .forEach((e) => (e.onclick = () => setTab(e.dataset.tab)));
@@ -78,6 +79,10 @@ export async function manage(ctx) {
         active: v.active === "true",
       }),
     );
+  }
+  if (tab === "experiences") {
+    manageExperiences({ area, open, field, textarea, form, submit, api, esc }, data.experiences);
+    return;
   }
   if (tab === "products") {
     area.innerHTML =
@@ -170,6 +175,34 @@ export async function manage(ctx) {
       .forEach((el) => (el.onclick = () => editor(Number(el.dataset.edit))));
     return;
   }
+  if (tab === "reels") {
+    const reels = s.reels || [];
+    const editor = (index) => {
+      const reel = reels[index] || {};
+      const options = data.products.map((p) =>
+        `<option value="${esc(p.id)}" ${p.id === reel.productId ? "selected" : ""}>${esc(p.name)}</option>`
+      ).join("");
+      open(reel.video ? "Edit shoppable film" : "Add shoppable film", form(
+        `<label>Linked product<select name="productId" required>${options}</select></label>` +
+        field("video", "MP4 video URL", reel.video, "required") +
+        field("poster", "Poster image URL", reel.poster, "required") +
+        field("position", "Position in Watch & Shop", index + 1, `type="number" min="1" max="${reel.video ? reels.length : reels.length + 1}" required`) +
+        (reel.video ? '<label><input type="checkbox" name="remove"> Remove this film</label>' : "")
+      ));
+      submit(document.querySelector("#dialog"), ({ productId, video, poster, position, remove }) => {
+        const updated = reels.filter((_, i) => i !== index);
+        if (!remove) updated.splice(Number(position) - 1, 0, { productId, video, poster });
+        return api("/api/manage/settings", { reels: updated });
+      });
+    };
+    area.innerHTML = '<div class="between"><h3>Watch &amp; Shop</h3><button id="add-reel" class="btn">Add film</button></div>' +
+      reels.map((r, i) => `<div class="admin-item"><img src="${esc(r.poster)}" alt=""><strong>${esc(data.products.find((p) => p.id === r.productId)?.name || r.productId)}</strong><button class="text-link" data-edit-reel="${i}">Edit</button></div>`).join("");
+    area.querySelector("#add-reel").onclick = () => editor(reels.length);
+    area.querySelectorAll("[data-edit-reel]").forEach((button) => {
+      button.onclick = () => editor(Number(button.dataset.editReel));
+    });
+    return;
+  }
   if (tab === "collections" || tab === "campaigns") {
     const isCat = tab === "collections",
       list = isCat ? cats : s.heroSlides,
@@ -208,10 +241,24 @@ export async function manage(ctx) {
       ? data.orders
           .map(
             (o) =>
-              `<div>${orderCard(o)}<div class="minor">${esc(o.address.name)} · ${esc(o.email)} · ${esc(o.address.phone)}<br>${esc([o.address.address, o.address.city, o.address.state, o.address.pin].join(", "))}</div>${o.status === "Paid" || o.shipment ? `<button class="btn ghost" data-ship="${esc(o.id)}" data-action="${o.shipment ? "track" : "book"}">${o.shipment ? "Refresh tracking" : "Book Shiprocket shipment"}</button>` : ""}</div>`,
+              `<div>${orderCard(o)}<div class="minor">${esc(o.address.name)} · ${esc(o.email)} · ${esc(o.address.phone)}<br>${esc([o.address.address, o.address.city, o.address.state, o.address.pin].filter(Boolean).join(", "))}</div>${o.fulfillment === "activity" && o.status === "Paid" && (!o.gift || o.gift.claimedBy) ? `<button class="btn ghost" data-redeem="${esc(o.id)}">Redeem activity pass</button>` : ""}${o.fulfillment !== "activity" && (o.status === "Paid" || o.shipment) ? `<button class="btn ghost" data-ship="${esc(o.id)}" data-action="${o.shipment ? "track" : "book"}">${o.shipment ? "Refresh tracking" : "Book Shiprocket shipment"}</button>` : ""}</div>`,
           )
           .join("")
       : "<p>No orders yet. Paid orders can be booked with Shiprocket here.</p>";
+    area.querySelectorAll("[data-redeem]").forEach(el => {
+      el.onclick = async () => {
+        if (!window.confirm("Mark this activity pass as used?")) return;
+        el.disabled = true;
+        try {
+          await api("/api/manage/redeem-activity", { id: el.dataset.redeem });
+          render();
+          toast("Activity pass redeemed");
+        } catch (err) {
+          toast(err.message);
+          el.disabled = false;
+        }
+      };
+    });
     area.querySelectorAll("[data-ship]").forEach(
       (el) =>
         (el.onclick = async () => {

@@ -100,7 +100,74 @@ export const products = [
   image: categories.find((c) => c.id === p.category).image,
   active: true,
 }));
+export const experiences = [
+  {
+    id: "studio-clay-date",
+    kind: "activity",
+    name: "Clay date for two",
+    city: "Bengaluru",
+    vibe: "Creative",
+    duration: "2 hours",
+    price: 2400,
+    image: "/images/experience-pottery.webp",
+    detail: "Pull up two stools at the pottery wheel. Shape matching cups, swap your creations, and leave a little clay on your sleeves.",
+  },
+  {
+    id: "hillside-cabin",
+    kind: "property",
+    name: "The hillside hideout",
+    city: "Coorg",
+    vibe: "Slow living",
+    duration: "Overnight",
+    price: 0,
+    image: "/images/experience-cabin.webp",
+    detail: "A timber cabin, a misty deck and time for a second coffee. Picture a slow weekend tucked into the hills.",
+  },
+  {
+    id: "twilight-picnic",
+    kind: "activity",
+    name: "Golden hour picnic",
+    city: "Pune",
+    vibe: "Outdoors",
+    duration: "90 minutes",
+    price: 1800,
+    image: "/images/experience-picnic.webp",
+    detail: "Find a spot on the blanket, split something sweet and watch the light change. A picnic idea for two with room to linger.",
+  },
+  {
+    id: "courtyard-cafe",
+    kind: "spot",
+    name: "Coffee in the courtyard",
+    city: "Jaipur",
+    vibe: "Café hopping",
+    duration: "An afternoon",
+    price: 0,
+    image: "/images/experience-cafe.webp",
+    detail: "A sunlit courtyard, two iced coffees and a quiet corner. An easy idea for a first date or a catch-up that runs long.",
+  },
+].map((listing) => ({
+  ...listing,
+  photos: listing.id === "studio-clay-date"
+    ? [listing.image, "/images/experience-pottery-detail.webp"]
+    : listing.id === "hillside-cabin"
+      ? [listing.image, "/images/experience-cabin-detail.webp"]
+      : [listing.image],
+  video: listing.id === "studio-clay-date" ? "/images/experience-pottery.mp4" : "",
+  reel: "",
+  location: "",
+  mapUrl: "",
+  stock: 0,
+  active: true,
+  preview: true,
+  revision: 0,
+}));
+
 export const settings = {
+  reels: ["noir-chocolate", "evening-duet", "velvet-flame", "afterglow-oil", "rose-cacao", "slow-sunday"].map((productId) => ({
+    productId,
+    video: `/images/reels/${productId}.mp4`,
+    poster: `/images/reels/${productId}.webp`,
+  })),
   announcement: "Complimentary shipping on orders above ₹1,499",
   shippingThreshold: 1499,
   shippingFee: 79,

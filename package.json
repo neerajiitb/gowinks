@@ -10,6 +10,6 @@
     "dev": "node --env-file-if-exists=.env server/node.mjs",
     "start": "node --env-file-if-exists=.env server/node.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node --test scripts/store.test.mjs"
+    "test": "node --test scripts/*.test.mjs"
   }
 }
