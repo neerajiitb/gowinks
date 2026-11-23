@@ -57,6 +57,7 @@ const catalog = (await readFile("public/catalog.js", "utf8")).replaceAll(
   api = (await readFile("server/api.mjs", "utf8"))
     .replace(/^import[\s\S]*?from "\.\.\/public\/catalog\.js";\s*/, "")
     .replace(/^import .* from "\.\/after-dark\.mjs";/m, "")
+    .replace(/^import .* from "\.\/shop-activity\.mjs";/m, "")
     .replace("export async function api", "async function api");
 const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
   "export function assetResponse",
@@ -64,6 +65,7 @@ const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
 );
 const darkHelper = (await readFile("server/after-dark.mjs", "utf8")).replace(/^export /gm, "");
 const worker =
+  (await readFile("server/shop-activity.mjs", "utf8")).replace(/^export /gm, "") + "\n" +
   darkHelper + "\n" +
   assetHelper +
   "\n" +

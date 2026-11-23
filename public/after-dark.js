@@ -1,3 +1,4 @@
+import { badges } from "./shop-activity.js";
 const key = "gw.after-dark";
 let pass;
 try { pass = JSON.parse(sessionStorage.getItem(key)); } catch {}
@@ -86,13 +87,13 @@ export function mountDark(main, id, { api, esc, fmt, render, checkout, resume, r
     return;
   }
   const href = p => "#/after-dark/" + encodeURIComponent(p.id);
-  const cards = listings.map(p => `<article class="ad-card"><div class="ad-portrait">${film(p, esc)}</div><div class="ad-caption"><span>${esc(p.tag || "After Dark")}</span><h3><a href="${href(p)}">${esc(p.name)}</a></h3><div><strong>${fmt(p.price)}</strong><a href="${href(p)}">View product <span aria-hidden="true">›</span></a></div></div></article>`).join("");
+  const cards = listings.map(p => `<article class="ad-card"><div class="ad-portrait">${film(p, esc)}</div><div class="ad-caption">${badges(p, esc)}<span>${esc(p.tag || "After Dark")}</span><h3><a href="${href(p)}">${esc(p.name)}</a></h3><div><strong>${fmt(p.price)}</strong><a href="${href(p)}">View product <span aria-hidden="true">›</span></a></div></div></article>`).join("");
   if (id && id !== "checkout" && id !== "resume") {
     const p = darkProduct(id);
-    main.innerHTML = p ? `<section class="ad-detail"><a class="ad-back" href="#/after-dark">← After Dark collection</a><div class="ad-detail-grid"><div class="ad-portrait">${film(p, esc)}</div><div class="ad-detail-info"><span class="ad-label">${esc(p.tag || "After Dark")}</span><h1>${esc(p.name)}</h1><strong>${fmt(p.price)}</strong><p>${esc(p.detail)}</p>${p.spec ? '<p>' + esc(p.spec) + '</p>' : ''}<button class="ad-solid" data-add="${esc(p.id)}" ${p.available ? "" : "disabled"}>${p.available ? "Add to bag" : "Currently unavailable"}</button></div></div></section>` : '<div class="ad-loading">This product is unavailable. <a href="#/after-dark">Explore the collection</a></div>';
+    main.innerHTML = p ? `<section class="ad-detail"><a class="ad-back" href="#/after-dark">← After Dark collection</a><div class="ad-detail-grid"><div class="ad-portrait">${film(p, esc)}</div><div class="ad-detail-info"><span class="ad-label">${esc(p.tag || "After Dark")}</span><h1>${esc(p.name)}</h1>${badges(p, esc)}<div class="shop-live" data-live-note="product" hidden></div><strong>${fmt(p.price)}</strong><p>${esc(p.detail)}</p>${p.spec ? '<p>' + esc(p.spec) + '</p>' : ''}<button class="ad-solid" data-add="${esc(p.id)}" ${p.available ? "" : "disabled"}>${p.available ? "Add to bag" : "Currently unavailable"}</button></div></div></section>` : '<div class="ad-loading">This product is unavailable. <a href="#/after-dark">Explore the collection</a></div>';
   } else {
     const lead = listings[0];
-    main.innerHTML = `<section class="ad-hero"><div class="ad-hero-copy"><span class="ad-label">Go Winks · 18+ collection</span><h1>After <em>Dark</em></h1><p>For slow nights and closer company.</p>${lead ? '<button class="ad-outline" data-explore>Explore the reels ↓</button>' : ''}</div>${lead ? `<a class="ad-cover" href="${href(lead)}"><img src="${esc(lead.image)}" alt="${esc(lead.name)}"><span>${esc(lead.name)} ›</span></a>` : ''}</section><section class="ad-collection" aria-labelledby="ad-collection-title"><h2 id="ad-collection-title" tabindex="-1">The night edit</h2>${cards ? '<div class="ad-grid">' + cards + '</div>' : '<p>New pieces are on their way.</p>'}</section>`;
+    main.innerHTML = `<section class="ad-hero"><div class="ad-hero-copy"><span class="ad-label">Go Winks · 18+ collection</span><h1>After <em>Dark</em></h1><p>For slow nights and closer company.</p>${lead ? '<button class="ad-outline" data-explore>Explore the reels ↓</button>' : ''}</div>${lead ? `<a class="ad-cover" href="${href(lead)}"><img src="${esc(lead.image)}" alt="${esc(lead.name)}"><span>${esc(lead.name)} ›</span></a>` : ''}</section><div class="shop-live" data-live-note="store" hidden></div><section class="ad-collection" aria-labelledby="ad-collection-title"><h2 id="ad-collection-title" tabindex="-1">The night edit</h2>${cards ? '<div class="ad-grid">' + cards + '</div>' : '<p>New pieces are on their way.</p>'}</section>`;
     const explore = main.querySelector("[data-explore]");
     if (explore) explore.onclick = () => main.querySelector("#ad-collection-title").focus();
     if (id === "checkout" && ready) checkout();

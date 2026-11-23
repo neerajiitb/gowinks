@@ -42,6 +42,7 @@ export const products = [
   },
   {
     id: "evening-duet",
+    favourite: true,
     name: "The Evening Duet Gift Set",
     category: "gifts",
     price: 2490,
@@ -53,6 +54,7 @@ export const products = [
   },
   {
     id: "velvet-flame",
+    favourite: true,
     name: "Velvet Hour Candle",
     category: "candles",
     price: 1490,

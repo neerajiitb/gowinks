@@ -60,3 +60,9 @@ The server calculates totals and reserves stock atomically before opening a prov
 [Payment integration](https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/integration-steps/) · [Webhook validation](https://razorpay.com/docs/webhooks/validate-test/) · [Shiprocket API](https://apidocs.shiprocket.in/)
 
 The locally bundled Quicksand, DM Sans, Mulish, Cormorant Garamond and Kalnia fonts are distributed with their SIL Open Font License files in public/fonts.
+
+## Live activity and WhatsApp support
+
+In **Store management → Activity**, managers and admins can set the visitor and order windows, enable regional counts, edit badge labels, set the paid-order threshold for hot sellers, and configure the WhatsApp number and prefilled message. Mark editorial favourites in **Products → Edit**.
+
+The shop refreshes activity on entry, on returning to a visible tab and every 45 seconds while browsing. Refreshing the page counts the same browser once. Regional figures use the hosting platform’s coarse region when available and require three other browsers in that region. Normal and After Dark browsing counts are separate. Recent orders count orders placed within the configured window that have a confirmed payment. Hot-selling badges count distinct paid orders containing the product. WhatsApp is enabled after staff enter their international business number.

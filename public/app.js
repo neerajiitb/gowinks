@@ -1,3 +1,4 @@
+import { badges, syncActivity } from "./shop-activity.js";
 import { createShopMotion } from "./motion.js";
 import { darkToken, darkProduct, mountDark, inDark, leaveDark, stopDarkFilms } from "./after-dark.js";
 import { mountExperiences } from "./experiences.js";
@@ -181,7 +182,7 @@ const tile = (route, name, image) =>
   `<a class="retail-tile" href="#${esc(route)}"><img loading="lazy" src="${esc(image)}" alt=""><span>${esc(name)}</span></a>`;
 const catCard = (c) => tile("/shop/" + c.id, c.name, c.image);
 const card = (p) =>
-  `<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"><span class="card-view">VIEW DETAILS</span></a><button class="heart-btn ${wishlist().includes(p.id) ? "selected" : ""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button><h3>${link("/product/" + p.id, esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
+  `<article class="product"><a class="pimage" href="#/product/${esc(p.id)}"><img loading="lazy" src="${esc(p.image)}" alt="${esc(p.name)}"><span class="card-view">VIEW DETAILS</span></a><button class="heart-btn ${wishlist().includes(p.id) ? "selected" : ""}" data-heart="${esc(p.id)}" aria-pressed="${wishlist().includes(p.id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button>${badges(p, esc)}<h3>${link("/product/" + p.id, esc(p.name))}</h3><div class="price">${fmt(p.price)}</div></article>`;
 const crumbs = (label) =>
   `<div class="crumb">${link("/", "Home")} &nbsp;/&nbsp; ${esc(label)}</div>`;
 const intro = (sub, t, p = "") =>
@@ -222,7 +223,7 @@ function home() {
     ? edits.map((e) => ({ r: "/edit/" + e.id, n: e.name, i: e.image }))
     : cats().map((c) => ({ r: "/shop/" + c.id, n: c.name, i: c.image }));
   return (
-    hero() +
+    '<div class="shop-live" data-live-note="store" hidden></div>' + hero() +
     `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
  ${watchShop(s, state.products, esc)}
  ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
@@ -420,7 +421,7 @@ function detail(id) {
         : []),
     ],
     g = gallery[galleryIndex] || gallery[0];
-  return `<div class="pdp">${crumbs((c?.name || "Products") + " / " + p.name)}<div class="pdp-body"><div class="pdp-gallery"><div class="pd-main ${g.zoom ? "zoomed" : ""}"><img src="${esc(g.src)}" alt="${esc(p.name + " · " + g.label)}"><button class="heart-btn ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-pressed="${wishlist().includes(id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button></div><div class="thumbs">${gallery.map((v, i) => `<button data-gallery="${i}" class="${i === galleryIndex ? "chosen" : ""} ${v.zoom ? "zoomed" : ""}" aria-label="${esc(v.label)}" aria-pressed="${i === galleryIndex}"><img src="${esc(v.src)}" alt=""></button>`).join("")}</div></div><div class="pdp-info"><h1>${esc(p.name)}</h1><p>From ${link("/shop/" + p.category, esc(c?.name || "Go Winks"))}</p><div class="pd-prices"><div><strong>${fmt(p.price)}</strong><small>MRP inclusive of all taxes</small></div><div><b>${p.available ? "In stock" : "Sold out"}</b><small>${esc(c?.short || "Go Winks")}</small></div></div><div class="delivery-panel"><b>${icon("truck")} Delivery information</b><p>${esc(state.settings.announcement)}</p><details><summary>Shipping & packaging</summary><p>${esc(state.settings.shipping)}</p></details></div><p class="pd-description">${esc(p.detail)}</p><details class="pd-spec"><summary>Product details</summary><p>${esc(p.spec)}</p></details><details class="pd-spec"><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details><div class="pd-quantity"><span>Quantity</span>${stepper("detail", quantity)}</div><div class="pd-buy"><button data-buy="${esc(id)}" ${p.available ? "" : "disabled"}>BUY NOW</button><button data-add="${esc(id)}" ${p.available ? "" : "disabled"}>ADD TO BAG</button></div><div class="pd-service">${[
+  return `<div class="pdp">${crumbs((c?.name || "Products") + " / " + p.name)}<div class="pdp-body"><div class="pdp-gallery"><div class="pd-main ${g.zoom ? "zoomed" : ""}"><img src="${esc(g.src)}" alt="${esc(p.name + " · " + g.label)}"><button class="heart-btn ${wishlist().includes(id) ? "selected" : ""}" data-heart="${esc(id)}" aria-pressed="${wishlist().includes(id)}" aria-label="Save ${esc(p.name)}">${icon("heart")}</button></div><div class="thumbs">${gallery.map((v, i) => `<button data-gallery="${i}" class="${i === galleryIndex ? "chosen" : ""} ${v.zoom ? "zoomed" : ""}" aria-label="${esc(v.label)}" aria-pressed="${i === galleryIndex}"><img src="${esc(v.src)}" alt=""></button>`).join("")}</div></div><div class="pdp-info"><h1>${esc(p.name)}</h1>${badges(p,esc)}<div class="shop-live" data-live-note="product" hidden></div><p>From ${link("/shop/" + p.category, esc(c?.name || "Go Winks"))}</p><div class="pd-prices"><div><strong>${fmt(p.price)}</strong><small>MRP inclusive of all taxes</small></div><div><b>${p.available ? "In stock" : "Sold out"}</b><small>${esc(c?.short || "Go Winks")}</small></div></div><div class="delivery-panel"><b>${icon("truck")} Delivery information</b><p>${esc(state.settings.announcement)}</p><details><summary>Shipping & packaging</summary><p>${esc(state.settings.shipping)}</p></details></div><p class="pd-description">${esc(p.detail)}</p><details class="pd-spec"><summary>Product details</summary><p>${esc(p.spec)}</p></details><details class="pd-spec"><summary>Returns & exchanges</summary><p>${esc(state.settings.returns)}</p></details><div class="pd-quantity"><span>Quantity</span>${stepper("detail", quantity)}</div><div class="pd-buy"><button data-buy="${esc(id)}" ${p.available ? "" : "disabled"}>BUY NOW</button><button data-add="${esc(id)}" ${p.available ? "" : "disabled"}>ADD TO BAG</button></div><div class="pd-service">${[
     ["box", "Discreet packaging"],
     ["gift", "Gift notes"],
     ["lock", "Secure checkout"],
@@ -786,6 +787,8 @@ function render() {
       '<div class="inside">' +
       empty("Page not found", "Browse the boutique to continue.") +
       "</div>";
+  const viewed = page === "product" || page === "after-dark" ? product(route[2]) : null;
+  syncActivity(state, page, viewed?.id || "", !!darkToken(), api);
   syncHome();
   document.title =
     (page === "product"

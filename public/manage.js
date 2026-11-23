@@ -24,7 +24,7 @@ export async function manage(ctx) {
     main.innerHTML = `<section class="inside">${crumbs("Store management")}${intro("STORE TEAM", "Store management", u ? "This account does not have a store team role. Share your account ID with the store administrator to request access." : "Sign in with a store team account to manage Go Winks.")}${u ? '<a class="btn" href="#/account">View my profile</a>' : '<button class="btn" data-act="login">Sign in</button>'}</section>`;
     return;
   }
-  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "experiences", "storefront", "collections", "edits", "campaigns", "reels", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
+  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "experiences", "storefront", "activity", "collections", "edits", "campaigns", "reels", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
   main
     .querySelectorAll("[data-tab]")
     .forEach((e) => (e.onclick = () => setTab(e.dataset.tab)));
@@ -69,7 +69,7 @@ export async function manage(ctx) {
     open(
       p.id ? "Edit product" : "Add a product",
       form(
-        `<div class="form-grid">${field("name", "Product name", p.name, "required maxlength=100")}${selectCat("category", p.category)}${field("price", "Price (₹)", p.price, 'required type="number" min="1" max="1000000"')}${field("stock", "Total units stocked", p.stock, 'required type="number" min="0" max="100000"')}${field("tag", "Product label", p.tag)}${field("image", "Image URL", p.image, "required")}<label>Shopping mode<select name="afterDark"><option value="false">Normal boutique</option><option value="true" ${p.afterDark ? "selected" : ""}>After Dark · 18+</option></select></label>${field("video", "After Dark reel URL (optional)", p.video || "")}${textarea("detail", "Description", p.detail)}${textarea("spec", "Size, ingredients or care", p.spec)}<label>Availability<select name="active"><option value="true">Visible</option><option value="false" ${p.active === false ? "selected" : ""}>Hidden</option></select></label></div>`,
+        `<div class="form-grid">${field("name", "Product name", p.name, "required maxlength=100")}${selectCat("category", p.category)}${field("price", "Price (₹)", p.price, 'required type="number" min="1" max="1000000"')}${field("stock", "Total units stocked", p.stock, 'required type="number" min="0" max="100000"')}${field("tag", "Product label", p.tag)}<label class="check-row"><input type="checkbox" name="favourite" ${p.favourite ? "checked" : ""}>Go Winks editorial favourite</label>${field("image", "Image URL", p.image, "required")}<label>Shopping mode<select name="afterDark"><option value="false">Normal boutique</option><option value="true" ${p.afterDark ? "selected" : ""}>After Dark · 18+</option></select></label>${field("video", "After Dark reel URL (optional)", p.video || "")}${textarea("detail", "Description", p.detail)}${textarea("spec", "Size, ingredients or care", p.spec)}<label>Availability<select name="active"><option value="true">Visible</option><option value="false" ${p.active === false ? "selected" : ""}>Hidden</option></select></label></div>`,
       ),
     );
     submit(document.querySelector("#dialog"), (v) =>
@@ -78,6 +78,7 @@ export async function manage(ctx) {
         id: p.id,
         active: v.active === "true",
         afterDark: v.afterDark === "true",
+        favourite: v.favourite === "on",
       }),
     );
   }
@@ -103,6 +104,33 @@ export async function manage(ctx) {
           (e.onclick = () =>
             productForm(data.products.find((p) => p.id === e.dataset.edit))),
       );
+    return;
+  }
+  if (tab === "activity") {
+    const cfg = data.activity;
+    const toggle = (k,label) => `<label class="check-row"><input type="checkbox" name="${k}" ${cfg[k] ? "checked" : ""}>${label}</label>`;
+    const number = (k,label,min,max) => field(k,label,cfg[k],`type="number" required min="${min}" max="${max}"`);
+    area.innerHTML = form('<h3>Live activity</h3>' +
+      toggle("visitors","Show other active shoppers on the storefront") +
+      toggle("regional","Prefer regional counts when at least three other shoppers are active nearby") +
+      toggle("viewers","Show other viewers on product pages") +
+      toggle("orders","Show recent paid orders on the storefront") +
+      '<div class="form-grid">' + number("minutes","Visitor activity window (minutes)",1,10) +
+      number("orderMinutes","Recent order window (minutes)",5,1440) + '</div>' +
+      '<h3>Product badges</h3>' + toggle("favourites","Show editorial favourites selected in Products") +
+      field("favouriteLabel","Favourite badge text",cfg.favouriteLabel,"required maxlength=36") +
+      toggle("hot","Show hot-selling badge based on paid orders") +
+      field("hotLabel","Hot-selling badge text",cfg.hotLabel,"required maxlength=36") +
+      '<div class="form-grid">' + number("hotDays","Sales window (days)",1,30) +
+      number("hotThreshold","Minimum distinct paid orders per product",1,1000) + '</div>' +
+      '<h3>WhatsApp support</h3>' + toggle("whatsapp","Show the WhatsApp support button") +
+      field("phone","Company WhatsApp number with country code",cfg.phone,'type="tel" maxlength=24 placeholder="+91"') +
+      textarea("greeting","Customer’s prefilled opening message",cfg.greeting,"required maxlength=350"));
+    submit(area, values => {
+      for (const k of ["visitors","regional","viewers","orders","favourites","hot","whatsapp"]) values[k] = values[k] === "on";
+      for (const k of ["minutes","orderMinutes","hotDays","hotThreshold"]) values[k] = Number(values[k]);
+      return api("/api/manage/activity", values);
+    });
     return;
   }
   if (tab === "storefront") {

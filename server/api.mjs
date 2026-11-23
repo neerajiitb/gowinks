@@ -4,6 +4,7 @@ import {
   settings as initialSettings,
 } from "../public/catalog.js";
 import { darkProducts, hasDarkAccess, darkAccessAction } from "./after-dark.mjs";
+import { activitySettings, updateActivity, badgeProducts, shopActivity } from "./shop-activity.mjs";
 const json = (value, status = 200) =>
   Response.json(value, { status, headers: { "cache-control": "no-store" } });
 const fail = (status, message) => {
@@ -580,10 +581,22 @@ export async function api(req, env, u) {
       new URL(req.headers.get("origin")).origin !== new URL(req.url).origin
     )
       fail(403, "Cross-site request denied.");
+    if (path === "/api/activity/pulse" && method === "POST") {
+      const body = await req.json(), cfg = await activitySettings(db);
+      const dark = body.room === "after-dark";
+      if (dark && !await hasDarkAccess(req, db)) fail(403, "Enter After Dark to continue.");
+      let id = "";
+      if (goodId(body.product)) {
+        const row = await stmt(db, "SELECT data FROM catalog WHERE id=?", body.product).first();
+        const p = row ? JSON.parse(row.data) : [...initialProducts, ...darkProducts].find(p => p.id === body.product);
+        if (p?.active && !p.kind && !!p.afterDark === dark) id = p.id;
+      }
+      return json(await shopActivity(req, db, cfg, dark ? "after-dark" : "boutique", id, body));
+    }
     if (path === "/api/after-dark/access" && method === "POST") return await darkAccessAction(req, db);
     if (path === "/api/after-dark/catalog" && method === "GET") {
       if (!await hasDarkAccess(req, db)) fail(403, "Confirm you are 18 or older to enter After Dark.");
-      return json({ products: (await catalog(db)).filter(p => p.afterDark && p.active && !p.kind) });
+      return json({ products: await badgeProducts(db, (await catalog(db)).filter(p => p.afterDark && p.active && !p.kind), await activitySettings(db)) });
     }
     if (path === "/api/invitations" || path.startsWith("/api/invitations/"))
       return await invitations(req, db, u, path);
@@ -611,16 +624,17 @@ export async function api(req, env, u) {
       return json({ ok: true });
     }
     if (method === "GET" && path === "/api/store") {
-      const [s, list, role] = await Promise.all([
+      const [s, list, role, activity] = await Promise.all([
         settings(db),
         catalog(db),
-        permissions(env, u),
+        permissions(env, u), activitySettings(db),
       ]);
       const visible = new Set(list.filter(p => p.active && !p.kind && !p.afterDark).map(p => p.id));
       return json({
         settings: { ...s, reels: (s.reels || []).filter(r => visible.has(r.productId)),
           edits: (s.edits || []).map(e => ({ ...e, items: e.items.filter(id => visible.has(id)) })) },
-        products: list.filter((p) => visible.has(p.id)),
+        activity: { ...activity, phone: activity.whatsapp ? activity.phone : "" },
+        products: await badgeProducts(db, list.filter(p => visible.has(p.id)), activity),
         experiences: list.filter((p) => p.kind && p.active),
         user: u ? { ...(await profile(db, u)), role } : null,
         hosted: !!env.HOSTED,
@@ -731,6 +745,7 @@ export async function api(req, env, u) {
     if (path === "/api/manage" && method === "GET") {
       const list = await catalog(db);
       return json({
+        activity: await activitySettings(db),
         products: list.filter((p) => !p.kind),
         experiences: list.filter((p) => p.kind),
         orders: (
@@ -750,6 +765,7 @@ export async function api(req, env, u) {
     }
     if (path === "/api/manage/experience" && method === "POST")
       return json(await saveExperience(db, b));
+    if (path === "/api/manage/activity" && method === "POST") return json(await updateActivity(db,b));
     if (path === "/api/manage/product" && method === "POST") {
       if (b.id && (await catalog(db)).some((p) => p.id === b.id && p.kind))
         fail(409, "Edit this listing in Experiences.");
@@ -761,6 +777,7 @@ export async function api(req, env, u) {
         spec: clean(b.spec, 700),
         image: clean(b.image, 1500),
         tag: clean(b.tag, 40),
+        favourite: b.favourite === true,
         afterDark: b.afterDark === true,
         video: b.afterDark && b.video ? listingUrl(b.video, "video") : "",
         active: !!b.active,
