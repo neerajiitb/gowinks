@@ -1,7 +1,8 @@
+import { darkToken, darkProduct, mountDark, inDark, leaveDark, stopDarkFilms } from "./after-dark.js";
 import { mountExperiences } from "./experiences.js";
 import { activityCheckout, activityGift, ownedPassInfo, receivedPassCard } from "./activity-passes.js";
 import { watchShop, mountReels } from "./reels.js";
-import { settings as defaults, products as samples } from "./catalog.js";
+import { settings as defaults } from "./catalog.js";
 import { icon } from "./icons.js";
 import { manage } from "./manage.js";
 import { renderInvitations } from "./invitations.js";
@@ -26,7 +27,7 @@ const save = (key, obj) =>
   localStorage.setItem("gw." + key, JSON.stringify(obj));
 let state = {
     settings: defaults,
-    products: samples.map((p) => ({ ...p, available: p.stock })),
+    products: [],
     user: null,
     hosted: false,
     paymentsReady: false,
@@ -42,15 +43,16 @@ let state = {
   returnAfterAuth = "",
   loadFailed = false;
 const cats = () => state.settings.categories,
-  product = (id) => state.products.find((p) => p.id === id),
+  product = (id) => state.products.find((p) => p.id === id) || (inDark() && darkProduct(id)),
   category = (id) => cats().find((c) => c.id === id),
   wishlist = () => (state.user ? state.user.wishlist || [] : guestWishlist),
   bagCount = () =>
     Object.entries(bag).reduce((n, [id, q]) => n + (product(id) ? q : 0), 0);
-export async function api(url, data) {
+export async function api(url, data, access = inDark() ? darkToken() : "") {
   const res = await fetch(url, {
     method: data === undefined ? "GET" : "POST",
-    headers: data === undefined ? {} : { "content-type": "application/json" },
+    headers: { ...(data === undefined ? {} : { "content-type": "application/json" }),
+      ...(access ? { "x-gw-after-dark": access } : {}) },
     body: data === undefined ? undefined : JSON.stringify(data),
   });
   let result;
@@ -103,10 +105,15 @@ function header() {
   const n = bagCount(),
     badge = n ? '<span class="cart-dot">' + n + "</span>" : "";
 
+  document.body.classList.toggle("ad-mode", inDark());
+  if (inDark()) {
+    $("#header").innerHTML = `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
+    return;
+  }
   const menu = (label, route, items, img) =>
     `<div class="nav-group">${link(route, esc(label), "nav-parent")}<div class="nav-panel"><div><strong>${esc(label)}</strong>${items}${link(route, "Shop all", "panel-all")}</div><img src="${esc(img)}" alt=""></div></div>`;
   $("#header").innerHTML =
-    `<div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
+    `<a class="ad-entry" href="#/after-dark">☾ After Dark <span>18+</span></a><div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
  <nav class="shop-nav" aria-label="Shop categories"><div class="nav-in"><a class="nav-monogram" href="#/" aria-label="Go Winks home"><img src="/monogram.svg" alt=""></a>${menu(
    "All Products",
    "/shop",
@@ -453,7 +460,7 @@ function showBag() {
   open(
     "Your bag",
     list.length
-      ? `${list.map(({ p, qty }) => `<div class="row-item"><a href="#/product/${esc(p.id)}"><img src="${esc(p.image)}" alt="${esc(p.name)}"></a><div><h3>${esc(p.name)}</h3><span class="price">${fmt(p.price)}</span><br>${stepper(p.id, qty)}</div><button class="icon" data-remove="${esc(p.id)}" aria-label="Remove ${esc(p.name)}">${icon("x")}</button></div>`).join("")}<form id="coupon-form" class="action-row"><input name="code" aria-label="Offer code" placeholder="Offer code" maxlength="32" style="flex:1" value="${esc(coupon)}"><button class="btn ghost">Apply</button></form><div class="feedback" role="status" id="coupon-feedback"></div><label class="stack">Gift note (optional)<textarea id="gift-note" maxlength="240" placeholder="A little note for them…">${esc(giftNote)}</textarea></label>${sum()}<button class="btn wide" data-act="checkout">Continue to checkout</button>`
+      ? `${list.map(({ p, qty }) => `<div class="row-item"><a href="#/${p.afterDark ? "after-dark" : "product"}/${esc(p.id)}"><img src="${esc(p.image)}" alt="${esc(p.name)}"></a><div><h3>${esc(p.name)}</h3><span class="price">${fmt(p.price)}</span><br>${stepper(p.id, qty)}</div><button class="icon" data-remove="${esc(p.id)}" aria-label="Remove ${esc(p.name)}">${icon("x")}</button></div>`).join("")}<form id="coupon-form" class="action-row"><input name="code" aria-label="Offer code" placeholder="Offer code" maxlength="32" style="flex:1" value="${esc(coupon)}"><button class="btn ghost">Apply</button></form><div class="feedback" role="status" id="coupon-feedback"></div><label class="stack">Gift note (optional)<textarea id="gift-note" maxlength="240" placeholder="A little note for them…">${esc(giftNote)}</textarea></label>${sum()}<button class="btn wide" data-act="checkout">Continue to checkout</button>`
       : empty("Your bag is waiting", "Find something to enjoy together."),
   );
 }
@@ -542,7 +549,7 @@ function checkout() {
     return;
   }
   if (!state.user) {
-    returnAfterAuth = "/checkout";
+    returnAfterAuth = inDark() ? "/after-dark/checkout" : "/checkout";
     auth();
     return;
   }
@@ -637,7 +644,7 @@ async function launchPayment(order, key) {
   }).open();
 }
 const orderCard = (o) =>
-  `<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map((i) => `<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${ownedPassInfo(o, state.user, esc)}${o.tracking ? "<p>Tracking: " + esc(o.tracking.courier) + " " + esc(o.tracking.awb) + " · " + esc(o.tracking.status) + "</p>" : ""}${o.status === "Awaiting payment" && o.userId === state.user?.id ? '<button class="text-link" data-resume="' + esc(o.id) + '">Resume payment</button>' : ""}${o.note ? "<p>Gift note: " + esc(o.note) + "</p>" : ""}</article>`;
+  `<article class="order"><div class="between"><strong>${esc(o.id)}</strong><span class="chip">${esc(o.status)}</span></div><small>${esc(new Date(o.created).toLocaleDateString("en-IN"))}</small>${o.items.map((i) => `<p>${esc(i.name)} × ${i.qty}</p>`).join("")}<p><b>${fmt(o.total)}</b></p>${ownedPassInfo(o, state.user, esc)}${o.tracking ? "<p>Tracking: " + esc(o.tracking.courier) + " " + esc(o.tracking.awb) + " · " + esc(o.tracking.status) + "</p>" : ""}${o.status === "Awaiting payment" && o.userId === state.user?.id ? (o.items.some(i => i.afterDark) ? link("/after-dark/resume/" + o.id, "Resume in After Dark", "text-link") : '<button class="text-link" data-resume="' + esc(o.id) + '">Resume payment</button>') : ""}${o.note ? "<p>Gift note: " + esc(o.note) + "</p>" : ""}</article>`;
 function account() {
   const u = state.user;
   if (!u)
@@ -662,8 +669,16 @@ function render() {
     page = route[1],
     main = $("#main"),
     s = state.settings;
+  stopDarkFilms();
+  if (page !== "after-dark" && darkToken()) leaveDark(api);
   header();
-  if (!page) main.innerHTML = home();
+  if (page === "after-dark") mountDark(main, route[2], { api, esc, fmt, render, checkout, ready: !!state.experiences, close,
+    resume: () => {
+      if (!route[3]) return;
+      open("Resume payment", '<button class="btn" data-resume="' + esc(route[3]) + '">Continue to payment</button>');
+    },
+  });
+  else if (!page) main.innerHTML = home();
   else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
     main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
       (loadFailed ? 'Could not load experiences. Refresh to try again.' : 'Loading GoWings Experience…') + '</section>';
@@ -767,6 +782,7 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
+            "after-dark": "After Dark",
             experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWings Experience",
             invite: "Experience invitation",
             invites: "My invitations",
@@ -1105,6 +1121,7 @@ footer();
 render();
 refresh()
   .then(() => {
+    if (inDark() && $("#main [data-confirm-age]")) return;
     render();
   })
   .catch(() => {

@@ -10,6 +10,7 @@ import { promisify } from "node:util";
 import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 import { database } from "./db.mjs";
+import { hasDarkAccess } from "./after-dark.mjs";
 import { api } from "./api.mjs";
 import { assetResponse } from "./asset.mjs";
 const derive = promisify(scrypt),
@@ -51,11 +52,16 @@ export const server = createServer(async (req, res) => {
         return;
       }
       try {
+        const restricted = path.startsWith(resolve(publicRoot, "images/after-dark") + "/");
+        if (restricted && !await hasDarkAccess(new Request(url), db, true)) {
+          res.writeHead(403, { "cache-control": "private, no-store" }).end();
+          return;
+        }
         const data = await readFile(path);
         const asset = assetResponse(
           { method: req.method, headers: new Headers(req.headers) },
           types[extname(path)] || "application/octet-stream",
-          data,
+          data, restricted,
         );
         res
           .writeHead(asset.status, Object.fromEntries(asset.headers))

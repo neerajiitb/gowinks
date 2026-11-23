@@ -56,12 +56,15 @@ const catalog = (await readFile("public/catalog.js", "utf8")).replaceAll(
   ),
   api = (await readFile("server/api.mjs", "utf8"))
     .replace(/^import[\s\S]*?from "\.\.\/public\/catalog\.js";\s*/, "")
+    .replace(/^import .* from "\.\/after-dark\.mjs";/m, "")
     .replace("export async function api", "async function api");
 const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
   "export function assetResponse",
   "function assetResponse",
 );
+const darkHelper = (await readFile("server/after-dark.mjs", "utf8")).replace(/^export /gm, "");
 const worker =
+  darkHelper + "\n" +
   assetHelper +
   "\n" +
   "const {initialProducts,initialExperiences,initialSettings}=(()=>{" +
@@ -83,7 +86,9 @@ export default {async fetch(req,env){
  if(!id||!email||!env.HOSTED_ADMIN_EMAIL||email.toLowerCase()!==env.HOSTED_ADMIN_EMAIL.toLowerCase())return new Response("Owner access required",{status:403});
 }
  const a=assets[p==="/"?"/index.html":p];if(!a)return new Response("Not found",{status:404});
- return assetResponse(req,a[0],Uint8Array.from(atob(a[1]),c=>c.charCodeAt(0)));
+ const restricted=p.startsWith("/images/after-dark/");
+ if(restricted && !await hasDarkAccess(req,env.DB,true))return new Response(null,{status:403,headers:{"cache-control":"private, no-store"}});
+ return assetResponse(req,a[0],Uint8Array.from(atob(a[1]),c=>c.charCodeAt(0)),restricted);
 }};\n`;
 await writeFile("dist/server/index.js", worker);
 await cp(".openai/hosting.json", "dist/.openai/hosting.json");

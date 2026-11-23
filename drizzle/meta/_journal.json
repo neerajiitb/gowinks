@@ -15,6 +15,13 @@
       "when": 1795478400000,
       "tag": "0001_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795564800000,
+      "tag": "0002_after_dark",
+      "breakpoints": true
     }
   ]
 }

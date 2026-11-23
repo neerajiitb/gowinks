@@ -1,5 +1,5 @@
 /** Return partial video bytes for mobile playback and seeks. */
-export function assetResponse(request, type, bytes) {
+export function assetResponse(request, type, bytes, restricted = false) {
   const headers = {
     "content-type": type,
     "x-content-type-options": "nosniff",
@@ -8,6 +8,7 @@ export function assetResponse(request, type, bytes) {
   if (type === "text/html") headers["cache-control"] = "no-store";
   if (type === "image/webp" || type === "video/mp4")
     headers["cache-control"] = "public, max-age=3600";
+  if (restricted) headers["cache-control"] = "private, no-store";
   let status = 200;
   if (type === "video/mp4") {
     headers["accept-ranges"] = "bytes";

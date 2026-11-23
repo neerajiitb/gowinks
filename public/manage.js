@@ -69,7 +69,7 @@ export async function manage(ctx) {
     open(
       p.id ? "Edit product" : "Add a product",
       form(
-        `<div class="form-grid">${field("name", "Product name", p.name, "required maxlength=100")}${selectCat("category", p.category)}${field("price", "Price (₹)", p.price, 'required type="number" min="1" max="1000000"')}${field("stock", "Total units stocked", p.stock, 'required type="number" min="0" max="100000"')}${field("tag", "Product label", p.tag)}${field("image", "Image URL", p.image, "required")}${textarea("detail", "Description", p.detail)}${textarea("spec", "Size, ingredients or care", p.spec)}<label>Availability<select name="active"><option value="true">Visible</option><option value="false" ${p.active === false ? "selected" : ""}>Hidden</option></select></label></div>`,
+        `<div class="form-grid">${field("name", "Product name", p.name, "required maxlength=100")}${selectCat("category", p.category)}${field("price", "Price (₹)", p.price, 'required type="number" min="1" max="1000000"')}${field("stock", "Total units stocked", p.stock, 'required type="number" min="0" max="100000"')}${field("tag", "Product label", p.tag)}${field("image", "Image URL", p.image, "required")}<label>Shopping mode<select name="afterDark"><option value="false">Normal boutique</option><option value="true" ${p.afterDark ? "selected" : ""}>After Dark · 18+</option></select></label>${field("video", "After Dark reel URL (optional)", p.video || "")}${textarea("detail", "Description", p.detail)}${textarea("spec", "Size, ingredients or care", p.spec)}<label>Availability<select name="active"><option value="true">Visible</option><option value="false" ${p.active === false ? "selected" : ""}>Hidden</option></select></label></div>`,
       ),
     );
     submit(document.querySelector("#dialog"), (v) =>
@@ -77,6 +77,7 @@ export async function manage(ctx) {
         ...v,
         id: p.id,
         active: v.active === "true",
+        afterDark: v.afterDark === "true",
       }),
     );
   }
@@ -90,7 +91,7 @@ export async function manage(ctx) {
       data.products
         .map(
           (p) =>
-            `<div class="admin-item"><img src="${esc(p.image)}" alt=""><div><strong>${esc(p.name)}</strong><div class="minor">${fmt(p.price)} · ${p.available} available · ${p.active ? "Visible" : "Hidden"}</div></div><button class="text-link" data-edit="${esc(p.id)}">Edit</button></div>`,
+            `<div class="admin-item"><img src="${esc(p.afterDark ? "/monogram.svg" : p.image)}" alt=""><div><strong>${esc(p.name)}</strong><div class="minor">${p.afterDark ? "After Dark · " : ""}${fmt(p.price)} · ${p.available} available · ${p.active ? "Visible" : "Hidden"}</div></div><button class="text-link" data-edit="${esc(p.id)}">Edit</button></div>`,
         )
         .join("");
     area.querySelector("#add-product").onclick = () =>
@@ -150,7 +151,7 @@ export async function manage(ctx) {
           ) +
             field("name", "Title", old.name, "required") +
             field("image", "Image URL", old.image, "required") +
-            `<fieldset><legend>Products</legend>${data.products.map((p) => `<label class="check-row"><input name="products" type="checkbox" value="${esc(p.id)}" ${old.items.includes(p.id) ? "checked" : ""}>${esc(p.name)}</label>`).join("")}</fieldset>`,
+            `<fieldset><legend>Products</legend>${data.products.filter(p => !p.afterDark).map((p) => `<label class="check-row"><input name="products" type="checkbox" value="${esc(p.id)}" ${old.items.includes(p.id) ? "checked" : ""}>${esc(p.name)}</label>`).join("")}</fieldset>`,
         ),
       );
       submit(document.querySelector("#dialog"), (v) => {
@@ -179,7 +180,7 @@ export async function manage(ctx) {
     const reels = s.reels || [];
     const editor = (index) => {
       const reel = reels[index] || {};
-      const options = data.products.map((p) =>
+      const options = data.products.filter(p => !p.afterDark).map((p) =>
         `<option value="${esc(p.id)}" ${p.id === reel.productId ? "selected" : ""}>${esc(p.name)}</option>`
       ).join("");
       open(reel.video ? "Edit shoppable film" : "Add shoppable film", form(

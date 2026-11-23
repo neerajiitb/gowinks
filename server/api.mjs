@@ -3,6 +3,7 @@ import {
   experiences as initialExperiences,
   settings as initialSettings,
 } from "../public/catalog.js";
+import { darkProducts, hasDarkAccess, darkAccessAction } from "./after-dark.mjs";
 const json = (value, status = 200) =>
   Response.json(value, { status, headers: { "cache-control": "no-store" } });
 const fail = (status, message) => {
@@ -33,7 +34,7 @@ const getOrder = async (db, id) => {
 };
 async function catalog(db) {
   const edits = await rows(db, "SELECT * FROM catalog"),
-    map = new Map([...initialProducts, ...initialExperiences].map((p) => [p.id, { ...p }]));
+    map = new Map([...initialProducts, ...initialExperiences, ...darkProducts].map((p) => [p.id, { ...p }]));
   for (const r of edits) map.set(r.id, JSON.parse(r.data));
   const usage = await rows(
     db,
@@ -240,7 +241,10 @@ async function capture(db, o, p) {
     o.id,
   ).run();
 }
-async function newOrder(env, u, b) {
+async function newOrder(env, u, b, darkAccess) {
+  const list = await catalog(env.DB);
+  if (!darkAccess && Array.isArray(b.items) && b.items.some(i => list.some(p => p.id === i?.id && p.afterDark)))
+    fail(403, "Confirm your age in After Dark before checkout.");
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET)
     fail(
       503,
@@ -262,12 +266,12 @@ async function newOrder(env, u, b) {
     ).first();
   if (old) {
     const o = JSON.parse(old.data);
+    if (!darkAccess && o.items.some(i => i.afterDark)) fail(403, "Enter After Dark to continue.");
     if (o.status !== "Awaiting payment" || !o.provider)
       fail(409, "This checkout already exists. Review it in your orders.");
     return { order: o, key: env.RAZORPAY_KEY_ID };
   }
-  const list = await catalog(db),
-    s = await settings(db),
+  const s = await settings(db),
     seen = new Set(),
     activityOrder = b.fulfillment === "activity";
   if (activityOrder && (b.items.length !== 1 || b.items[0]?.qty !== 1))
@@ -286,6 +290,7 @@ async function newOrder(env, u, b) {
       qty: i.qty,
       image: p.image,
       capacity: p.stock,
+      ...(p.afterDark ? { afterDark: true } : {}),
       ...(activityOrder ? { city: p.city || "", detail: p.detail || "" } : {}),
     };
   });
@@ -575,6 +580,11 @@ export async function api(req, env, u) {
       new URL(req.headers.get("origin")).origin !== new URL(req.url).origin
     )
       fail(403, "Cross-site request denied.");
+    if (path === "/api/after-dark/access" && method === "POST") return await darkAccessAction(req, db);
+    if (path === "/api/after-dark/catalog" && method === "GET") {
+      if (!await hasDarkAccess(req, db)) fail(403, "Confirm you are 18 or older to enter After Dark.");
+      return json({ products: (await catalog(db)).filter(p => p.afterDark && p.active && !p.kind) });
+    }
     if (path === "/api/invitations" || path.startsWith("/api/invitations/"))
       return await invitations(req, db, u, path);
     if (path === "/api/webhook" && method === "POST") {
@@ -606,9 +616,11 @@ export async function api(req, env, u) {
         catalog(db),
         permissions(env, u),
       ]);
+      const visible = new Set(list.filter(p => p.active && !p.kind && !p.afterDark).map(p => p.id));
       return json({
-        settings: s,
-        products: list.filter((p) => !p.kind && p.active),
+        settings: { ...s, reels: (s.reels || []).filter(r => visible.has(r.productId)),
+          edits: (s.edits || []).map(e => ({ ...e, items: e.items.filter(id => visible.has(id)) })) },
+        products: list.filter((p) => visible.has(p.id)),
         experiences: list.filter((p) => p.kind && p.active),
         user: u ? { ...(await profile(db, u)), role } : null,
         hosted: !!env.HOSTED,
@@ -659,19 +671,19 @@ export async function api(req, env, u) {
       }
       return json(activityPass(order));
     }
-    if (path === "/api/orders" && method === "GET")
-      return json(
-        (
-          await rows(
-            db,
-            "SELECT data FROM orders WHERE user_id=? ORDER BY rowid DESC",
-            u.id,
-          )
-        ).map((r) => JSON.parse(r.data)),
-      );
+    if (path === "/api/orders" && method === "GET") {
+      const orders = await rows(db, "SELECT data FROM orders WHERE user_id=? ORDER BY rowid DESC", u.id);
+      const visible = await hasDarkAccess(req, db);
+      return json(orders.map(r => {
+        const o = JSON.parse(r.data);
+        if (!visible) o.items = o.items.map(i => i.afterDark ? { ...i, name: "After Dark item", image: "/monogram.svg" } : i);
+        return o;
+      }));
+    }
     if (path === "/api/resume" && method === "POST") {
       const o = await getOrder(db, b.id);
       if (!o || o.userId !== u.id) fail(404, "Order not found.");
+      if (o.items.some(i => i.afterDark) && !await hasDarkAccess(req, db)) fail(403, "Enter After Dark to resume this payment.");
       if (
         o.status !== "Awaiting payment" ||
         !o.provider ||
@@ -681,7 +693,7 @@ export async function api(req, env, u) {
       return json({ order: o, key: env.RAZORPAY_KEY_ID });
     }
     if (path === "/api/checkout" && method === "POST")
-      return json(await newOrder(env, u, b));
+      return json(await newOrder(env, u, b, await hasDarkAccess(req, db)));
     if (path === "/api/verify" && method === "POST") {
       const o = await getOrder(db, b.id);
       if (!o || o.userId !== u.id) fail(404, "Order not found.");
@@ -749,10 +761,14 @@ export async function api(req, env, u) {
         spec: clean(b.spec, 700),
         image: clean(b.image, 1500),
         tag: clean(b.tag, 40),
+        afterDark: b.afterDark === true,
+        video: b.afterDark && b.video ? listingUrl(b.video, "video") : "",
         active: !!b.active,
         price: Number(b.price),
         stock: Number(b.stock),
       };
+      if (!p.afterDark && p.image.startsWith("/images/after-dark/"))
+        fail(400, "Choose a normal-mode image or set the audience to After Dark.");
       if (
         !goodId(p.id) ||
         !p.name ||
@@ -809,7 +825,7 @@ export async function api(req, env, u) {
       if ("reels" in b) {
         if (!Array.isArray(b.reels) || b.reels.length > 16)
           fail(400, "Choose up to 16 shoppable films.");
-        const ids = new Set((await catalog(db)).filter((p) => !p.kind).map((p) => p.id));
+        const ids = new Set((await catalog(db)).filter((p) => !p.kind && !p.afterDark).map((p) => p.id));
         s.reels = b.reels.map((reel) => {
           if (!reel || !ids.has(reel.productId) || !safeImage(reel.video) || !safeImage(reel.poster))
             fail(400, "Each reel needs a product, a video URL, and a poster image.");
@@ -837,7 +853,7 @@ export async function api(req, env, u) {
           new Set(b.edits.map((e) => e.id)).size !== b.edits.length
         )
           fail(400, "Each edit needs a unique ID.");
-        const productIds = new Set((await catalog(db)).filter((p) => !p.kind).map((p) => p.id));
+        const productIds = new Set((await catalog(db)).filter((p) => !p.kind && !p.afterDark).map((p) => p.id));
         s.edits = b.edits.map((e) => {
           if (
             !goodId(e.id) ||

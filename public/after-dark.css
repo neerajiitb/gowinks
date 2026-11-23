@@ -1,0 +1,37 @@
+/* A separate, age-confirmed edition of the boutique. */
+.ad-entry{display:flex;align-items:center;justify-content:center;gap:.65em;min-height:34px;background:#271025;color:#ffe2cb!important;font-size:13px;font-weight:700;letter-spacing:.04em;text-decoration:none}
+.ad-entry span{font-size:10px;border:1px solid #b78898;border-radius:20px;padding:1px 6px}
+body.ad-mode{background:#170c16;color:#f9e2d9;padding-bottom:0}
+.ad-mode #header{position:sticky!important;top:0!important;transform:none!important;z-index:20;background:#1d101c;border-bottom:1px solid #51323f}
+.ad-mode #mobile-dock,.ad-mode #footer{display:none!important}
+.ad-bar{min-height:60px;max-width:1320px;margin:auto;padding:8px clamp(14px,4vw,64px);display:flex;align-items:center;gap:12px}
+.ad-bar .ad-brand{margin-right:auto;display:flex;align-items:center;gap:9px;color:#ffddc4;text-decoration:none;font-weight:700}
+.ad-bar .ad-brand img{width:34px;height:34px}
+.ad-bar button,.ad-bar .ad-normal{display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#ffe2d2;background:transparent;border:1px solid #895b6d;border-radius:100px;padding:8px 13px;font:inherit;font-size:13px;font-weight:700;min-height:42px;text-decoration:none}
+.ad-mode #main{background:#170c16;color:#f9e2d9}
+.ad-mode #main :is(h1,h2,h3,p){color:inherit}
+.ad-mode #main :is(h1,h2,h3){font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.045em}
+.ad-mode #main h1{font-size:clamp(64px,10vw,144px);line-height:.93;margin:18px 0}
+.ad-mode #main h1 em{color:#f4b2a4;font-weight:400}
+.ad-label,.ad-caption>span{font:700 11px/1.5 Quicksand,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#f6bcab}
+.ad-gate,.ad-loading{min-height:calc(100svh - 60px);display:grid;place-content:center;text-align:center;padding:30px 18px;background:radial-gradient(ellipse at 45% 34%,#512238 0%,#2e1527 38%,#170c16 78%)}
+.ad-gate-inner{max-width:640px}.ad-gate p,.ad-hero p,.ad-detail-info p{font-size:clamp(16px,2vw,21px);line-height:1.55}
+.ad-moon{font-family:Georgia,serif;color:#f8c5a7;font-size:55px}.ad-choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:27px 0 18px}
+.ad-mode .ad-solid,.ad-mode .ad-outline{font-family:inherit;font-weight:700;font-size:15px;line-height:1.3;display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 22px;border-radius:32px;text-decoration:none}
+.ad-mode .ad-solid{background:#ffd4bc;color:#301526;border:1px solid #ffd4bc}.ad-mode .ad-outline{color:#ffe1cf;background:transparent;border:1px solid #b88792}
+.ad-solid:disabled{opacity:.62}.ad-gate small,.ad-status{color:#dfc4cb}.ad-status{margin-top:8px}
+.ad-hero{display:grid;grid-template-columns:1fr 1fr;max-width:1320px;margin:auto;background:radial-gradient(ellipse at 18% 70%,#4e2337,#2b1426 65%,#190d19);overflow:hidden}
+.ad-hero-copy{align-self:center;padding:clamp(30px,6vw,92px)}.ad-hero-copy p{margin:0 0 26px}
+.ad-cover{position:relative;display:block;align-self:stretch;min-height:340px;max-height:570px;overflow:hidden}
+.ad-cover img{width:100%;height:100%;display:block;object-fit:cover;object-position:center 49%}.ad-cover span{position:absolute;bottom:15px;right:16px;background:#261021d9;color:#ffe4d3;padding:7px 13px;border-radius:30px;font-weight:600}
+.ad-collection,.ad-detail{max-width:1260px;margin:auto;padding:clamp(26px,5vw,70px) clamp(16px,4vw,54px)}
+.ad-collection h2{font-size:clamp(36px,5vw,65px);line-height:1.1;margin:0 0 22px;scroll-margin-top:85px}
+.ad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,32px)}
+.ad-card{min-width:0;background:#291724;border:1px solid #543341;border-radius:18px;overflow:hidden}
+.ad-portrait{aspect-ratio:2/3;background:#311526;overflow:hidden}.ad-portrait :is(img,video){width:100%;height:100%;object-fit:cover;display:block}
+.ad-caption{padding:18px}.ad-caption h3{font-size:clamp(24px,3vw,40px);line-height:1.1;margin:6px 0 15px}.ad-caption a,.ad-back,.ad-loading a{color:inherit}
+.ad-caption h3 a{text-decoration:none}.ad-caption>div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.ad-detail-grid{display:grid;grid-template-columns:minmax(220px,430px) 1fr;align-items:center;gap:clamp(24px,6vw,90px);margin-top:24px}
+.ad-detail .ad-portrait{border-radius:16px}.ad-mode #main .ad-detail h1{font-size:clamp(48px,7vw,86px)}.ad-detail-info .ad-solid{margin:10px 0}
+.ad-mode :focus-visible{outline:3px solid #edb18f;outline-offset:3px}
+@media(max-width:650px){.ad-bar{gap:6px}.ad-bar .ad-brand{font-size:14px}.ad-hero{grid-template-columns:1fr}.ad-hero-copy{padding:28px 20px}.ad-cover{min-height:0;height:clamp(200px,64vw,330px)}.ad-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px}.ad-card{flex:0 0 82%;scroll-snap-align:start}.ad-detail-grid{grid-template-columns:1fr}.ad-detail .ad-portrait{max-height:55svh;width:auto;justify-self:center}.ad-choices{flex-direction:column;align-items:stretch;margin-inline:auto;max-width:310px}}

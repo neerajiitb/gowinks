@@ -41,6 +41,8 @@ Customers can send a private invitation link through their own WhatsApp app and 
 
 The homepage's **Watch & Shop** carousel appears after **Shop By Category**. Staff can assign the featured products, posters and videos, reorder them or remove them under **Store management → Reels**.
 
+Open **After Dark · 18+** at the top of the storefront. The catalogue, bundled product films and checkout require an explicit adult self-declaration. Switching to **Normal mode** ends access. A visit expires after four hours. The three starter listings use illustrative product films and start with zero stock. Under **Store management → Products**, choose the shopping mode, set a poster and optional video URL, and update inventory. Place private self-hosted media under `public/images/after-dark/` for server-enforced access. External media URLs retain their provider’s access settings.
+
 ## Merchant setup
 
 The catalogue, prices, quantities, food details, product specifications, policies and parcel dimensions are sample merchandising content. Confirm these details against actual stock before accepting payments.
