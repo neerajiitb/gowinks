@@ -106,6 +106,7 @@ function header() {
     badge = n ? '<span class="cart-dot">' + n + "</span>" : "";
 
   document.body.classList.toggle("ad-mode", inDark());
+  document.querySelector('meta[name="theme-color"]').content = inDark() ? "#35104b" : "#300508";
   if (inDark()) {
     $("#header").innerHTML = `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
     return;
@@ -606,7 +607,7 @@ async function launchPayment(order, key) {
       email: order.email,
       contact: order.address.phone,
     },
-    theme: { color: "#39104e" },
+    theme: { color: getComputedStyle(document.body).getPropertyValue("--wine").trim() },
     modal: {
       ondismiss: () => {
         accountTab = "orders";

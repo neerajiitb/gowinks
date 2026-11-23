@@ -1,0 +1,41 @@
+/* The daytime boutique takes its reds from oxblood satin, with ivory for reading. */
+body:not(.ad-mode) {
+  --bordeaux: #300508;
+  --garnet: #650c16;
+  --wine: #530910;
+  --ink: #341c1e;
+  --muted: #70595a;
+  --paper: #fffaf6;
+  --pink: #f3dcd7;
+  --blush: #f7e9e5;
+  --peach: #ffe5ce;
+  --coral: #923344;
+  --gold: #80502e;
+  --line: #e5d1ca;
+  --film-base: #39060b;
+  --mast-gradient: linear-gradient(114deg, var(--bordeaux), #48080e 52%, var(--garnet));
+}
+
+body:not(.ad-mode) .ad-entry { background: var(--bordeaux); }
+body:not(.ad-mode) .nav-monogram { background: var(--garnet); }
+body:not(.ad-mode) .inside { background: var(--paper); }
+body:not(.ad-mode) :is(.picked, .recommend) > h2 { color: var(--wine); }
+body:not(.ad-mode) .rec-tools { background: #fffaf6f5; border-color: var(--line); }
+body:not(.ad-mode) .card-view { background: #47090eee; }
+body:not(.ad-mode) .plp-banner::after { background: #320509a6; }
+body:not(.ad-mode) :is(.retail-foot, .notice, .feedback, .chip, .activity-pass-summary) { background: var(--blush); }
+body:not(.ad-mode) .pd-buy button:first-child {
+  background: var(--mast-gradient);
+  border-color: var(--wine);
+  color: var(--paper);
+}
+body:not(.ad-mode) .xp-cover { background: var(--mast-gradient); }
+body:not(.ad-mode) .xp-cover h1 span { color: #f6c8ad; }
+body:not(.ad-mode) .xp-card-image span { background: #3b080ded; }
+body:not(.ad-mode) .xp-gallery-stage { background: var(--bordeaux); }
+body:not(.ad-mode) .xp-preview-note { background: var(--blush); border-color: var(--coral); }
+
+@media (max-width: 969px) {
+  body:not(.ad-mode) #mobile-dock { background: #42070dec; }
+  body:not(.ad-mode) .xp-mobile-entry { background: var(--blush); color: var(--wine); }
+}
