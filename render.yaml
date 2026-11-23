@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: gowinks
+    runtime: node
+    branch: main
+    region: singapore
+    plan: 0.5c-512mb
+    autoDeployTrigger: commit
+    buildCommand: npm test
+    startCommand: npm start
+    healthCheckPath: /api/store
+    disk:
+      name: gowinks-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "24.x"
+      - key: DATABASE_PATH
+        value: /var/data/store.sqlite
+      - key: COOKIE_SECURE
+        value: "1"

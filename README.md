@@ -4,6 +4,14 @@ Go Winks is a mobile-first couples’ wellness boutique. The storefront includes
 
 ## Run on your own server
 
+### Deploy from GitHub on Render
+
+[Deploy Go Winks on Render](https://render.com/deploy?repo=https://github.com/neerajiitb/gowinks). Connect the GitHub account that owns the repository and review the recurring compute and disk charges before applying the Blueprint. It creates one Node.js 24 web service in Singapore with 512 MB of memory and a 1 GB persistent disk. Each push to `main` runs the store tests before Render starts the new version. SQLite lives at `/var/data/store.sqlite` across deploys.
+
+Open the Render service URL and verify the catalogue and customer sign-in. A new service starts with its own database. Before switching the live domains, migrate any existing store records, verify customer and staff access, and configure the merchant credentials described below in Render's Environment settings. Add `gowinks.com` and `www.gowinks.com` under the service's Custom Domains and use the DNS records Render provides for that service.
+
+### Run locally or with Docker
+
 Use Node.js 24 or later. The self-hosted application uses the Node standard library, SQLite and browser-native JavaScript. It requires no npm dependencies.
 
 ```sh
