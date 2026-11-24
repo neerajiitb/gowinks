@@ -1,3 +1,4 @@
+import { moduleNav, mountPortal } from "./portal.js";
 import { mountConnect, stopConnect } from "./connect.js";
 import { badges, syncActivity } from "./shop-activity.js";
 import { createShopMotion } from "./motion.js";
@@ -89,7 +90,7 @@ const brand = () =>
     '<img class="gw-sigil" src="/monogram.svg" alt=""><img class="gw-wordmark" src="/wordmark.svg" alt="Go Winks">',
     "gw-brand",
   );
-const hash = () => location.hash.slice(1) || "/",
+const hash = () => location.hash.slice(1) || "/portal",
   goto = (r) => {
     close();
     if (hash() === r) render();
@@ -110,14 +111,20 @@ function header() {
 
   document.body.classList.toggle("ad-mode", inDark());
   document.querySelector('meta[name="theme-color"]').content = inDark() ? "#35104b" : "#300508";
+  const page = hash().split("?")[0].split("/")[1];
+  document.body.classList.toggle("portal-mode", page === "portal");
+  if (page === "portal") {
+    $("#header").replaceChildren();
+    return;
+  }
   if (inDark()) {
-    $("#header").innerHTML = `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
+    $("#header").innerHTML = moduleNav(page) + `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
     return;
   }
   const menu = (label, route, items, img) =>
     `<div class="nav-group">${link(route, esc(label), "nav-parent")}<div class="nav-panel"><div><strong>${esc(label)}</strong>${items}${link(route, "Shop all", "panel-all")}</div><img src="${esc(img)}" alt=""></div></div>`;
   $("#header").innerHTML =
-    `<a class="ad-entry" href="#/after-dark">☾ After Dark <span>18+</span></a><div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
+    moduleNav(page) + `<a class="ad-entry" href="#/after-dark">☾ After Dark <span>18+</span></a><div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
  <nav class="shop-nav" aria-label="Shop categories"><div class="nav-in"><a class="nav-monogram" href="#/" aria-label="Go Winks home"><img src="/monogram.svg" alt=""></a>${menu(
    "All Products",
    "/shop",
@@ -134,7 +141,7 @@ function header() {
      .map((e) => link("/edit/" + e.id, esc(e.name)))
      .join(""),
    editList()[1]?.image || state.settings.heroImage,
- )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? '<div class="wc-mobile-links">' + link("/experiences", "GoWinks Experience", "xp-mobile-entry") + link("/connect", "Winks Connect", "xp-mobile-entry") + "</div>" : ""}`;
+ )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>`;
   let dock = $("#mobile-dock");
   if (!dock) {
     dock = document.createElement("nav");
@@ -697,6 +704,7 @@ function render() {
   });
   else if (page === "connect") mountConnect({main,route,state,api,esc,fmt,launchPayment,
     login: () => { returnAfterAuth=hash(); auth(); }});
+  else if (page === "portal") mountPortal(main);
   else if (!page) main.innerHTML = home();
   else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
     main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
@@ -803,6 +811,7 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
+            portal: "Choose your window",
             connect: "Winks Connect",
             "after-dark": "After Dark",
             experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWinks Experience",
@@ -814,17 +823,24 @@ function render() {
             gifting: "Gifting guide",
           }[page] || "The Couples’ Boutique") + " | Go Winks";
 }
-window.addEventListener("hashchange", () => {
+window.addEventListener("hashchange", (event) => {
   close();
   quantity = 1;
   galleryIndex = 0;
   render();
   scrollTo(0, 0);
+  const previous = new URL(event.oldURL).hash;
+  if (!previous || previous === "#/portal" || hash() === "/portal") $("#main").focus({ preventScroll: true });
   motion.enter($("#main"), location.hash);
 });
 document.addEventListener("click", async (e) => {
   const el = e.target.closest("button,a");
   if (!el) return;
+  if (el.matches(".skip")) {
+    e.preventDefault();
+    $("#main").focus();
+    return;
+  }
   if (el.tagName === "A" && el.getAttribute("href")?.startsWith("#")) {
     motion.rememberProduct(el, e);
     if (el.getAttribute("href") === "#" + hash()) close();
