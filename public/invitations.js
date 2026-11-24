@@ -6,7 +6,7 @@ const statusLabels = { pending: "Awaiting reply", accepted: "Accepted", declined
 export function renderInvitations({ main, route, state, esc, api, signIn }) {
   main.innerHTML = '<section class="inside invite-page"><div class="invite-wrap"></div></section>';
   const panel = main.querySelector(".invite-wrap");
-  const back = '<a class="text-link" href="#/experiences">GoWings Experience</a>';
+  const back = '<a class="text-link" href="#/experiences">GoWinks Experience</a>';
   const history = '<a class="text-link" href="#/invites">My invitations</a>';
   const feedback = '<p class="feedback" role="status" aria-live="polite"></p>';
   const show = html => { if (panel.isConnected) panel.innerHTML = html; };
@@ -36,7 +36,7 @@ export function renderInvitations({ main, route, state, esc, api, signIn }) {
     const page = new URL(location.href);
     page.search = "";
     page.hash = invitePath(record.token);
-    const text = record.senderName + " invited you to " + record.listingName + " on GoWings Experience. View your invitation: " + page.href;
+    const text = record.senderName + " invited you to " + record.listingName + " on GoWinks Experience. View your invitation: " + page.href;
     show(back + '<h1>Share your invitation</h1><p>Send the private link to ' + esc(record.recipientName) +
       '. They can sign in, unlock it with their WhatsApp number and reply.</p><div class="invite-postcard"><small>FOR ' +
       esc(record.recipientName.toUpperCase()) + '</small><h2>' + esc(record.listingName) + '</h2>' +

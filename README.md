@@ -35,7 +35,7 @@ The private Sites edition uses the platform's authenticated identity and D1. Its
 
 ## Experiences and shoppable reels
 
-Open **GoWings Experience** from the storefront to browse activities, spots and stays. In **Store management → Experiences**, managers and admins can create and archive listings, edit city and mood filters, add photo and video URLs, and link an Instagram reel or a map. The four examples are previews with illustrative photography. For a real activity, set its price per couple, pass quantity and publication status. Stays and spots are discovery listings.
+Open **GoWinks Experience** from the storefront to browse activities, spots and stays. In **Store management → Experiences**, managers and admins can create and archive listings, edit city and mood filters, add photo and video URLs, and link an Instagram reel or a map. The four examples are previews with illustrative photography. For a real activity, set its price per couple, pass quantity and publication status. Stays and spots are discovery listings.
 
 Customers can send a private invitation link through their own WhatsApp app and track responses in **My invitations**. A recipient signs in, unlocks the invitation with the intended phone number, and accepts or declines. For paid gifts, the recipient signs in with the email chosen by the purchaser. Paid activity passes appear in order history for staff redemption and do not enter the shipping workflow.
 
@@ -67,10 +67,10 @@ In **Store management → Activity**, managers and admins can set the visitor an
 
 The shop refreshes activity on entry, on returning to a visible tab and every 45 seconds while browsing. Refreshing the page counts the same browser once. Regional figures use the hosting platform’s coarse region when available and require three other browsers in that region. Normal and After Dark browsing counts are separate. Recent orders count orders placed within the configured window that have a confirmed payment. Hot-selling badges count distinct paid orders containing the product. WhatsApp is enabled after staff enter their international business number.
 
-## Wings Connect
+## Winks Connect
 
-Open **Wings Connect** on the homepage to filter social events by city, date (India time) and intent. The three starter events are illustrative previews. Published free events support immediate reservations of up to four seats per account and event. Paid bookings use the existing Razorpay integration and appear on the guest list after payment is captured. Members can view their booking reference under **My tickets & profile** and cancel an unused free booking before the start time.
+Open **Winks Connect** on the homepage to filter social events by city, date (India time) and intent. The three starter events are illustrative previews. Published free events support immediate reservations of up to four seats per account and event. Paid bookings use the existing Razorpay integration and appear on the guest list after payment is captured. Members can view their booking reference under **My tickets & profile** and cancel an unused free booking before the start time.
 
-Use **Store management → Team** to grant the **Event manager** role to a registered account. In **Wings Connect → Event studio**, event managers create categories and manage their own events. Store managers and administrators can edit the full programme, rename shared categories and assign the organiser by saved account ID. Enter dates in India time, confirm the address, capacity and ticket price, then select **published** to open booking. The organiser’s **Host desk** shows confirmed tickets and check-ins for their assigned events and refreshes every 45 seconds.
+Use **Store management → Team** to grant the **Event manager** role to a registered account. In **Winks Connect → Event studio**, event managers create categories and manage their own events. Store managers and administrators can edit the full programme, rename shared categories and assign the organiser by saved account ID. Enter dates in India time, confirm the address, capacity and ticket price, then select **published** to open booking. The organiser’s **Host desk** shows confirmed tickets and check-ins for their assigned events and refreshes every 45 seconds.
 
 Customers choose a Connect display name before booking or commenting. Profile comments are opt-in. Event hosts can moderate their event threads, and members can remove comments from their own public profiles.

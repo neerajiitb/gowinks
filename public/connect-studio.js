@@ -16,7 +16,7 @@ export async function eventStudio({api,E,show,$,root,note,feedback,reload,busy,d
       <label>Starts (India time)<input required name="start" type="datetime-local" value="${localTime(e.start)}"></label><label>Ends (India time)<input required name="end" type="datetime-local" value="${localTime(e.end)}"></label>
       <label>Seats<input required min="1" max="5000" type="number" name="capacity" value="${E(e.capacity??20)}"></label><label>Ticket price per guest (₹, 0 for free)<input required min="0" max="100000" type="number" name="price" value="${E(e.price??0)}"></label>
       <label>Publication<select name="status">${["draft","preview","published","archived"].map(s=>`<option value="${s}" ${(e.status||"draft")===s?"selected":""}>${s}</option>`).join("")}</select></label></div>
-      <label>Cover image URL<input required maxlength="1500" name="image" value="${E(e.image||"/images/wings-connect.webp")}"></label>
+      <label>Cover image URL<input required maxlength="1500" name="image" value="${E(e.image||"/images/winks-connect.webp")}"></label>
       <label>Event description<textarea required maxlength="2500" name="description">${E(e.description||"")}</textarea></label><label>Entry requirements & house rules<textarea maxlength="900" name="rules">${E(e.rules||"")}</textarea></label><p role="status" data-editor-note></p><div class="wc-actions"><button class="wc-primary">Save event</button><button type="button" class="wc-outline" data-close-editor>Close</button></div></form></section>`;
     const f=editor.querySelector("form");f.elements.title.focus();
     editor.querySelector("[data-close-editor]").onclick=()=>{editor.replaceChildren();$("[data-new]").focus();};

@@ -127,14 +127,14 @@ function header() {
    state.settings.heroImage,
  )}${cats()
    .map((c) => menu(c.name, "/shop/" + c.id, groupLinks(c), c.image))
-   .join("")}<div class="nav-right">${link("/experiences", "GoWings Experience", "nav-parent")}${menu(
+   .join("")}<div class="nav-right">${link("/experiences", "GoWinks Experience", "nav-parent")}${menu(
    "Gifts",
    "/gifting",
    editList()
      .map((e) => link("/edit/" + e.id, esc(e.name)))
      .join(""),
    editList()[1]?.image || state.settings.heroImage,
- )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? '<div class="wc-mobile-links">' + link("/experiences", "GoWings Experience", "xp-mobile-entry") + link("/connect", "Wings Connect", "xp-mobile-entry") + "</div>" : ""}`;
+ )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? '<div class="wc-mobile-links">' + link("/experiences", "GoWinks Experience", "xp-mobile-entry") + link("/connect", "Winks Connect", "xp-mobile-entry") + "</div>" : ""}`;
   let dock = $("#mobile-dock");
   if (!dock) {
     dock = document.createElement("nav");
@@ -147,7 +147,7 @@ function header() {
 }
 function footer() {
   $("#footer").innerHTML =
-    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/connect","Wings Connect")}${link("/experiences", "GoWings Experience")}${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
+    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/connect","Winks Connect")}${link("/experiences", "GoWinks Experience")}${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
       .map((c) => link("/shop/" + c.id, esc(c.name)))
       .join(
         "",
@@ -228,7 +228,7 @@ function home() {
     `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
  ${watchShop(s, state.products, esc)}
  ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
- <a class="wc-home" href="#/connect"><img src="/images/wings-connect.webp" alt="" loading="lazy"><div><span>Wings Connect</span><h2>Meet your people.</h2><p>Explore social events in your city <b aria-hidden="true">↗</b></p></div></a><section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
+ <a class="wc-home" href="#/connect"><img src="/images/winks-connect.webp" alt="" loading="lazy"><div><span>Winks Connect</span><h2>Meet your people.</h2><p>Explore social events in your city <b aria-hidden="true">↗</b></p></div></a><section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
    .slice(0, 4)
    .map((v) => tile(v.r, v.n, v.i))
    .join(
@@ -700,7 +700,7 @@ function render() {
   else if (!page) main.innerHTML = home();
   else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
     main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
-      (loadFailed ? 'Could not load experiences. Refresh to try again.' : 'Loading GoWings Experience…') + '</section>';
+      (loadFailed ? 'Could not load experiences. Refresh to try again.' : 'Loading GoWinks Experience…') + '</section>';
   else if (page === "activity-checkout" || page === "activity-gift") {
     const ctx = { state, main, esc, fmt, field, api, launchPayment,
       login: () => { returnAfterAuth = hash(); auth(); },
@@ -803,9 +803,9 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
-            connect: "Wings Connect",
+            connect: "Winks Connect",
             "after-dark": "After Dark",
-            experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWings Experience",
+            experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWinks Experience",
             invite: "Experience invitation",
             invites: "My invitations",
             wishlist: "Wishlist",
@@ -991,8 +991,8 @@ document.addEventListener("click", async (e) => {
           cats()
             .map((c) => link("/shop/" + c.id, esc(c.name), "menu-link"))
             .join("") +
-          link("/connect", "Wings Connect", "menu-link") +
-          link("/experiences", "GoWings Experience", "menu-link") +
+          link("/connect", "Winks Connect", "menu-link") +
+          link("/experiences", "GoWinks Experience", "menu-link") +
           link("/gifting", "Gifting guide", "menu-link") +
           link("/account", "My account", "menu-link") +
           link("/offers", "Offers", "menu-link"),

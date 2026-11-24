@@ -17,14 +17,14 @@ function gcal(e) {
 export async function mountConnect(ctx) {
   const {main,state,route,api,esc:E,login,launchPayment}=ctx;
   const [,,page,id]=route;
-  main.innerHTML='<div class="wc"><div class="wc-content" role="status">Loading Wings Connect…</div></div>';
+  main.innerHTML='<div class="wc"><div class="wc-content" role="status">Loading Winks Connect…</div></div>';
   const root=main.firstElementChild;
-  const nav=()=>`<nav class="wc-nav" aria-label="Wings Connect"><a class="wc-word" href="#/connect">Wings <i>Connect</i></a><div><a href="#/connect/me">My tickets & profile</a>${state.user?'<a href="#/connect/host">Host desk</a>':''}${staff(state.user?.role)?'<a href="#/connect/studio">Event studio</a>':''}</div></nav>`;
+  const nav=()=>`<nav class="wc-nav" aria-label="Winks Connect"><a class="wc-word" href="#/connect">Winks <i>Connect</i></a><div><a href="#/connect/me">My tickets & profile</a>${state.user?'<a href="#/connect/host">Host desk</a>':''}${staff(state.user?.role)?'<a href="#/connect/studio">Event studio</a>':''}</div></nav>`;
   const show=html=>{if(root.isConnected) root.innerHTML=nav()+html;};
   const $=s=>root.querySelector(s);
   const note=msg=>{const node=$(".wc-feedback"); if(node) node.textContent=msg;};
   const feedback='<p class="wc-feedback" role="status"></p>';
-  const signed=()=>{if(state.user)return true;show('<div class="wc-content"><h1>Your Wings Connect</h1><p>Sign in to book tickets, join the event conversation and view your bookings.</p><button class="wc-primary" data-login>Sign in</button></div>');$("[data-login]").onclick=login;return false;};
+  const signed=()=>{if(state.user)return true;show('<div class="wc-content"><h1>Your Winks Connect</h1><p>Sign in to book tickets, join the event conversation and view your bookings.</p><button class="wc-primary" data-login>Sign in</button></div>');$("[data-login]").onclick=login;return false;};
   const reload=()=>{if(root.isConnected){stopConnect();mountConnect(ctx);}};
   const busy=async(btn,fn)=>{btn.disabled=true;try{await fn();}catch(err){note(err.message);}finally{if(btn.isConnected)btn.disabled=false;}};
   const common={api,E,show,$,root,note,feedback,reload,busy,rupees,dateLabel};
@@ -80,7 +80,7 @@ export async function mountConnect(ctx) {
     const cities=[...new Set(events.map(e=>e.city))].sort();
     if(!cities.includes(browse.city))browse.city=cities.find(c=>c.toLowerCase()===(pref?.city||state.user?.city||"").toLowerCase())||"";
     if(!categories.some(c=>c.id===browse.category))browse.category="";
-    show(`<section class="wc-hero"><img src="/images/wings-connect.webp" alt="Friends sharing mocktails at an evening rooftop social"><div><span class="wc-kicker">Go Winks social events</span><h1>Wings <i>Connect</i></h1><p>Make a friend, meet a spark, or find your next circle.</p><button class="wc-hero-btn" data-discover>Explore events</button></div></section><section class="wc-content" id="wc-discover"><div class="wc-head"><h2>Find your gathering</h2></div><form class="wc-filters"><label>City<select name="city"><option value="">All cities</option>${cities.map(c=>`<option ${browse.city===c?"selected":""}>${E(c)}</option>`).join("")}</select></label><label>Event date<input name="date" type="date" value="${E(browse.date)}"></label><button class="wc-outline" type="reset">Clear filters</button><fieldset><legend>What brings you here?</legend>${[{id:"",name:"All events"},...categories].map(c=>`<label><input type="radio" name="category" value="${E(c.id)}" ${browse.category===c.id?"checked":""}><span>${E(c.name)}</span></label>`).join("")}</fieldset></form><p class="wc-count" role="status"></p><div class="wc-grid"></div></section>`);
+    show(`<section class="wc-hero"><img src="/images/winks-connect.webp" alt="Friends sharing mocktails at an evening rooftop social"><div><span class="wc-kicker">Go Winks social events</span><h1>Winks <i>Connect</i></h1><p>Make a friend, meet a spark, or find your next circle.</p><button class="wc-hero-btn" data-discover>Explore events</button></div></section><section class="wc-content" id="wc-discover"><div class="wc-head"><h2>Find your gathering</h2></div><form class="wc-filters"><label>City<select name="city"><option value="">All cities</option>${cities.map(c=>`<option ${browse.city===c?"selected":""}>${E(c)}</option>`).join("")}</select></label><label>Event date<input name="date" type="date" value="${E(browse.date)}"></label><button class="wc-outline" type="reset">Clear filters</button><fieldset><legend>What brings you here?</legend>${[{id:"",name:"All events"},...categories].map(c=>`<label><input type="radio" name="category" value="${E(c.id)}" ${browse.category===c.id?"checked":""}><span>${E(c.name)}</span></label>`).join("")}</fieldset></form><p class="wc-count" role="status"></p><div class="wc-grid"></div></section>`);
     const form=$(".wc-filters"),draw=()=>{
       const match=events.filter(e=>(!browse.city||e.city===browse.city)&&(!browse.category||e.category===browse.category)&&(!browse.date||(localDate(e.start)<=browse.date&&localDate(e.end)>=browse.date)));
       $(".wc-count").textContent=match.length+" "+(match.length===1?"event":"events");
@@ -90,5 +90,5 @@ export async function mountConnect(ctx) {
     form.onreset=ev=>{ev.preventDefault();browse={city:"",category:"",date:""};form.elements.city.value="";form.elements.date.value="";form.querySelector('[name=category][value=""]').checked=true;draw();};
     $("[data-discover]").onclick=()=>$("#wc-discover").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth"});
     draw();
-  }catch(err){if(root.isConnected)show('<div class="wc-content"><h1>Wings Connect</h1><p role="alert">'+E(err.message)+'</p><a href="#/connect">Browse events</a></div>');}
+  }catch(err){if(root.isConnected)show('<div class="wc-content"><h1>Winks Connect</h1><p role="alert">'+E(err.message)+'</p><a href="#/connect">Browse events</a></div>');}
 }

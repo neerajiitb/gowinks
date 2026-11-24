@@ -126,7 +126,7 @@ export function ownedPassInfo(o, user, esc) {
     "/#/activity-gift/" + encodeURIComponent(o.gift.token),
     location.origin,
   ).href;
-  const text = `${o.address.name} gifted you ${o.items[0].name} on GoWings Experience. Claim your pass: ${link}`;
+  const text = `${o.address.name} gifted you ${o.items[0].name} on GoWinks Experience. Claim your pass: ${link}`;
   const wa =
     "https://wa.me/" +
     (o.gift.phone || "").replace(/\D/g, "") +

@@ -2,7 +2,7 @@ const types = { activity: "Activity", property: "Property", spot: "Spot" };
 
 export function manageExperiences(ctx, entries) {
   const { area, open, field, textarea, form, submit, api, esc } = ctx;
-  area.innerHTML = '<div class="between"><h3>GoWings Experience</h3><button type="button" class="btn" data-new-listing>Add listing</button></div>' +
+  area.innerHTML = '<div class="between"><h3>GoWinks Experience</h3><button type="button" class="btn" data-new-listing>Add listing</button></div>' +
     entries.map((item) => `<div class="admin-item"><img src="${esc(item.image)}" alt=""><div><strong>${esc(item.name)}</strong><div class="minor">${types[item.kind]} · ${esc(item.city)} · ${item.active ? item.preview ? "Preview" : "Published" : "Archived"}</div></div><button class="text-link" type="button" data-listing-id="${esc(item.id)}">Edit</button></div>`).join("");
   function edit(item = {}) {
     const kind = item.kind || "activity";

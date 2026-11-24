@@ -156,7 +156,7 @@ export async function connectApi(req,env,u,role,provider) {
     }else await q(db,"INSERT INTO connect_events(id,owner,category,data) VALUES(?,?,?,?)",uid(),owner,category,JSON.stringify(e)).run();
     return {ok:true};
   }
-  if(action!=="events") reject(404,"Unknown Wings Connect page.");
+  if(action!=="events") reject(404,"Unknown Winks Connect page.");
   const e=list.find(x=>x.id===id);
   if(!e) reject(404,"Event not found.");
   const host=!!u && e.owner===u.id, moderate=host||wide(role);

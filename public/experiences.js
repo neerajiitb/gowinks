@@ -22,7 +22,7 @@ export function mountExperiences(main, listings, id, { esc, fmt }) {
   const featured = listings.find(entry => entry.kind === "activity" && entry.image) || listings[0];
   main.innerHTML = `<div class="xp-directory">
     <section class="xp-cover"><div class="xp-cover-inner"><div class="xp-cover-text">
-      <h1>GoWings <span>Experience</span></h1>
+      <h1>GoWinks <span>Experience</span></h1>
       <p>Find a date for two, a spot worth sharing, or a stay for the weekend.</p>
       <a href="#/invites" class="xp-invites-link">${icon("gift")} My invitations</a>
     </div>${featured?.image ? `<img src="${esc(featured.image)}" alt="${esc(featured.name)}" class="xp-cover-photo">` : ""}</div></section>
