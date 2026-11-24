@@ -1,3 +1,4 @@
+import { mountConnect, stopConnect } from "./connect.js";
 import { badges, syncActivity } from "./shop-activity.js";
 import { createShopMotion } from "./motion.js";
 import { darkToken, darkProduct, mountDark, inDark, leaveDark, stopDarkFilms } from "./after-dark.js";
@@ -133,7 +134,7 @@ function header() {
      .map((e) => link("/edit/" + e.id, esc(e.name)))
      .join(""),
    editList()[1]?.image || state.settings.heroImage,
- )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? link("/experiences", "GoWings Experience " + icon("right"), "xp-mobile-entry") : ""}`;
+ )}${link("/offers", "Offers", "nav-parent")}</div></div></nav>${hash().split("?")[0] === "/" ? '<div class="wc-mobile-links">' + link("/experiences", "GoWings Experience", "xp-mobile-entry") + link("/connect", "Wings Connect", "xp-mobile-entry") + "</div>" : ""}`;
   let dock = $("#mobile-dock");
   if (!dock) {
     dock = document.createElement("nav");
@@ -146,7 +147,7 @@ function header() {
 }
 function footer() {
   $("#footer").innerHTML =
-    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/experiences", "GoWings Experience")}${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
+    `<div class="retail-foot"><div><h4>ABOUT GO WINKS</h4>${link("/connect","Wings Connect")}${link("/experiences", "GoWings Experience")}${link("/info/story", "Our story")}${link("/info/contact", "Contact us")}${link("/manage", "Store management")}</div><div><h4>CUSTOMER CARE</h4><button data-act="orders">My orders</button><button data-act="account">My account</button>${link("/info/shipping", "Shipping & delivery")}</div><div><h4>SHOP WITH CONFIDENCE</h4>${link("/info/returns", "Returns & exchanges")}${link("/offers", "Offers")}${link("/gifting", "Gifting guide")}</div><div><h4>SHOP BY CATEGORY</h4>${cats()
       .map((c) => link("/shop/" + c.id, esc(c.name)))
       .join(
         "",
@@ -227,7 +228,7 @@ function home() {
     `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
  ${watchShop(s, state.products, esc)}
  ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
- <section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
+ <a class="wc-home" href="#/connect"><img src="/images/wings-connect.webp" alt="" loading="lazy"><div><span>Wings Connect</span><h2>Meet your people.</h2><p>Explore social events in your city <b aria-hidden="true">↗</b></p></div></a><section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
    .slice(0, 4)
    .map((v) => tile(v.r, v.n, v.i))
    .join(
@@ -632,6 +633,9 @@ async function launchPayment(order, key) {
           payment: response.razorpay_payment_id,
           signature: response.razorpay_signature,
         });
+        if (order.fulfillment === "event") {
+          await refresh(); goto("/connect/me"); toast("Your event ticket is confirmed."); return;
+        }
         if (order.fulfillment === "activity") {
           sessionStorage.removeItem("gw.activityCheckout");
         } else {
@@ -674,13 +678,14 @@ function account() {
     ["orders", "Orders"],
     ["help", "Contact the store"],
   ];
-  return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${link("/invites", "My invitations", "text-link")}${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
+  return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${link("/connect/me", "My Connect profile & tickets", "text-link")}${link("/invites", "My invitations", "text-link")}${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
 }
 function render() {
   const route = hash().split("?")[0].split("/"),
     page = route[1],
     main = $("#main"),
     s = state.settings;
+  stopConnect();
   stopDarkFilms();
   if (page !== "after-dark" && darkToken()) leaveDark(api);
   header();
@@ -690,6 +695,8 @@ function render() {
       open("Resume payment", '<button class="btn" data-resume="' + esc(route[3]) + '">Continue to payment</button>');
     },
   });
+  else if (page === "connect") mountConnect({main,route,state,api,esc,fmt,launchPayment,
+    login: () => { returnAfterAuth=hash(); auth(); }});
   else if (!page) main.innerHTML = home();
   else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
     main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
@@ -796,6 +803,7 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
+            connect: "Wings Connect",
             "after-dark": "After Dark",
             experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWings Experience",
             invite: "Experience invitation",
@@ -983,6 +991,7 @@ document.addEventListener("click", async (e) => {
           cats()
             .map((c) => link("/shop/" + c.id, esc(c.name), "menu-link"))
             .join("") +
+          link("/connect", "Wings Connect", "menu-link") +
           link("/experiences", "GoWings Experience", "menu-link") +
           link("/gifting", "Gifting guide", "menu-link") +
           link("/account", "My account", "menu-link") +

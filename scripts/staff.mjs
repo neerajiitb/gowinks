@@ -1,8 +1,8 @@
 import { database } from "../server/db.mjs";
 const [email, role] = process.argv.slice(2);
-if (!email || !["admin", "manager", "customer"].includes(role))
+if (!email || !["admin", "manager", "event_manager", "customer"].includes(role))
   throw Error(
-    "Usage: node --env-file-if-exists=.env scripts/staff.mjs <registered-email> <admin|manager|customer>",
+    "Usage: node --env-file-if-exists=.env scripts/staff.mjs <registered-email> <admin|manager|event_manager|customer>",
   );
 const db = database(process.env.DATABASE_PATH || "data/store.sqlite").native,
   u = db.prepare("SELECT id FROM users WHERE email=?").get(email.toLowerCase());

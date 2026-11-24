@@ -58,13 +58,16 @@ const catalog = (await readFile("public/catalog.js", "utf8")).replaceAll(
     .replace(/^import[\s\S]*?from "\.\.\/public\/catalog\.js";\s*/, "")
     .replace(/^import .* from "\.\/after-dark\.mjs";/m, "")
     .replace(/^import .* from "\.\/shop-activity\.mjs";/m, "")
+    .replace(/^import .* from "\.\/connect\.mjs";/m, "")
     .replace("export async function api", "async function api");
 const assetHelper = (await readFile("server/asset.mjs", "utf8")).replace(
   "export function assetResponse",
   "function assetResponse",
 );
 const darkHelper = (await readFile("server/after-dark.mjs", "utf8")).replace(/^export /gm, "");
+const connectSource = (await readFile("server/connect.mjs","utf8")).replace(/^export /gm,"");
 const worker =
+  "const connectApi=(()=>{" + connectSource + "\nreturn connectApi;})();\n" +
   (await readFile("server/shop-activity.mjs", "utf8")).replace(/^export /gm, "") + "\n" +
   darkHelper + "\n" +
   assetHelper +

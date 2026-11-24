@@ -5,6 +5,7 @@ import {
 } from "../public/catalog.js";
 import { darkProducts, hasDarkAccess, darkAccessAction } from "./after-dark.mjs";
 import { activitySettings, updateActivity, badgeProducts, shopActivity } from "./shop-activity.mjs";
+import { connectApi } from "./connect.mjs";
 const json = (value, status = 200) =>
   Response.json(value, { status, headers: { "cache-control": "no-store" } });
 const fail = (status, message) => {
@@ -393,7 +394,7 @@ function activityPass(order) {
   };
 }
 async function ship(env, o, s, action) {
-  if (o.fulfillment === "activity") fail(409, "Activity passes are fulfilled digitally.");
+  if (["event","activity"].includes(o.fulfillment)) fail(409, "Tickets and activity passes are fulfilled digitally.");
   if (
     !env.SHIPROCKET_EMAIL ||
     !env.SHIPROCKET_PASSWORD ||
@@ -581,6 +582,8 @@ export async function api(req, env, u) {
       new URL(req.headers.get("origin")).origin !== new URL(req.url).origin
     )
       fail(403, "Cross-site request denied.");
+    if (path.startsWith("/api/connect/")) return json(await connectApi(req,env,u,await permissions(env,u),
+      body => gateway(env,"orders",body)));
     if (path === "/api/activity/pulse" && method === "POST") {
       const body = await req.json(), cfg = await activitySettings(db);
       const dark = body.room === "after-dark";
@@ -697,6 +700,10 @@ export async function api(req, env, u) {
     if (path === "/api/resume" && method === "POST") {
       const o = await getOrder(db, b.id);
       if (!o || o.userId !== u.id) fail(404, "Order not found.");
+      if (o.fulfillment === "event") {
+        const open = await stmt(db, "SELECT 1 FROM connect_events WHERE id=? AND json_extract(data,'$.status')='published' AND julianday(json_extract(data,'$.start'))>julianday('now')",o.eventId).first();
+        if (!open) fail(409,"Ticket booking has closed for this event.");
+      }
       if (o.items.some(i => i.afterDark) && !await hasDarkAccess(req, db)) fail(403, "Enter After Dark to resume this payment.");
       if (
         o.status !== "Awaiting payment" ||
@@ -749,7 +756,7 @@ export async function api(req, env, u) {
         products: list.filter((p) => !p.kind),
         experiences: list.filter((p) => p.kind),
         orders: (
-          await rows(db, "SELECT data FROM orders ORDER BY rowid DESC")
+          await rows(db, "SELECT data FROM orders WHERE json_extract(data,'$.eventId') IS NULL ORDER BY rowid DESC")
         ).map((r) => JSON.parse(r.data)),
         messages: (
           await rows(db, "SELECT data FROM messages ORDER BY rowid DESC")
@@ -960,7 +967,7 @@ export async function api(req, env, u) {
       if (
         !id ||
         id === u.id ||
-        !["manager", "admin", "customer"].includes(b.role)
+        !["manager", "admin", "customer", "event_manager"].includes(b.role)
       )
         fail(400, "Choose another registered account and a valid role.");
       if (!(await stmt(db, "SELECT id FROM profiles WHERE id=?", id).first()))

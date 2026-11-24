@@ -66,3 +66,11 @@ The locally bundled Quicksand, DM Sans, Mulish, Cormorant Garamond and Kalnia fo
 In **Store management → Activity**, managers and admins can set the visitor and order windows, enable regional counts, edit badge labels, set the paid-order threshold for hot sellers, and configure the WhatsApp number and prefilled message. Mark editorial favourites in **Products → Edit**.
 
 The shop refreshes activity on entry, on returning to a visible tab and every 45 seconds while browsing. Refreshing the page counts the same browser once. Regional figures use the hosting platform’s coarse region when available and require three other browsers in that region. Normal and After Dark browsing counts are separate. Recent orders count orders placed within the configured window that have a confirmed payment. Hot-selling badges count distinct paid orders containing the product. WhatsApp is enabled after staff enter their international business number.
+
+## Wings Connect
+
+Open **Wings Connect** on the homepage to filter social events by city, date (India time) and intent. The three starter events are illustrative previews. Published free events support immediate reservations of up to four seats per account and event. Paid bookings use the existing Razorpay integration and appear on the guest list after payment is captured. Members can view their booking reference under **My tickets & profile** and cancel an unused free booking before the start time.
+
+Use **Store management → Team** to grant the **Event manager** role to a registered account. In **Wings Connect → Event studio**, event managers create categories and manage their own events. Store managers and administrators can edit the full programme, rename shared categories and assign the organiser by saved account ID. Enter dates in India time, confirm the address, capacity and ticket price, then select **published** to open booking. The organiser’s **Host desk** shows confirmed tickets and check-ins for their assigned events and refreshes every 45 seconds.
+
+Customers choose a Connect display name before booking or commenting. Profile comments are opt-in. Event hosts can moderate their event threads, and members can remove comments from their own public profiles.

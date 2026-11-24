@@ -24,7 +24,7 @@ export async function manage(ctx) {
     main.innerHTML = `<section class="inside">${crumbs("Store management")}${intro("STORE TEAM", "Store management", u ? "This account does not have a store team role. Share your account ID with the store administrator to request access." : "Sign in with a store team account to manage Go Winks.")}${u ? '<a class="btn" href="#/account">View my profile</a>' : '<button class="btn" data-act="login">Sign in</button>'}</section>`;
     return;
   }
-  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "experiences", "storefront", "activity", "collections", "edits", "campaigns", "reels", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<div id="manage-area">Loading store data…</div></div>`;
+  main.innerHTML = `<div class="inside admin">${crumbs("Store management")}${intro("STORE TEAM", "Store management")}<div class="account-tabs">${["products", "experiences", "storefront", "activity", "collections", "edits", "campaigns", "reels", "orders", "messages", ...(u.role === "admin" ? ["team"] : [])].map((k) => `<button data-tab="${k}" class="${k === tab ? "current" : ""}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>${state.hosted && u.role === "admin" ? '<p style="margin-bottom:20px"><a href="/go-winks-source.zip" download class="text-link">Download project source</a></p>' : ""}<p><a class="text-link" href="#/connect/studio">Wings Connect event studio</a></p><div id="manage-area">Loading store data…</div></div>`;
   main
     .querySelectorAll("[data-tab]")
     .forEach((e) => (e.onclick = () => setTab(e.dataset.tab)));
@@ -270,7 +270,7 @@ export async function manage(ctx) {
       ? data.orders
           .map(
             (o) =>
-              `<div>${orderCard(o)}<div class="minor">${esc(o.address.name)} · ${esc(o.email)} · ${esc(o.address.phone)}<br>${esc([o.address.address, o.address.city, o.address.state, o.address.pin].filter(Boolean).join(", "))}</div>${o.fulfillment === "activity" && o.status === "Paid" && (!o.gift || o.gift.claimedBy) ? `<button class="btn ghost" data-redeem="${esc(o.id)}">Redeem activity pass</button>` : ""}${o.fulfillment !== "activity" && (o.status === "Paid" || o.shipment) ? `<button class="btn ghost" data-ship="${esc(o.id)}" data-action="${o.shipment ? "track" : "book"}">${o.shipment ? "Refresh tracking" : "Book Shiprocket shipment"}</button>` : ""}</div>`,
+              `<div>${orderCard(o)}<div class="minor">${esc(o.address.name)} · ${esc(o.email)} · ${esc(o.address.phone)}<br>${esc([o.address.address, o.address.city, o.address.state, o.address.pin].filter(Boolean).join(", "))}</div>${o.fulfillment === "activity" && o.status === "Paid" && (!o.gift || o.gift.claimedBy) ? `<button class="btn ghost" data-redeem="${esc(o.id)}">Redeem activity pass</button>` : ""}${!["activity","event"].includes(o.fulfillment) && (o.status === "Paid" || o.shipment) ? `<button class="btn ghost" data-ship="${esc(o.id)}" data-action="${o.shipment ? "track" : "book"}">${o.shipment ? "Refresh tracking" : "Book Shiprocket shipment"}</button>` : ""}</div>`,
           )
           .join("")
       : "<p>No orders yet. Paid orders can be booked with Shiprocket here.</p>";
@@ -321,7 +321,7 @@ export async function manage(ctx) {
   if (tab === "team") {
     area.innerHTML =
       form(
-        `<h3>Assign a store role</h3><p>Use the account ID from the customer’s saved profile. Managers edit the shop and fulfil orders. Administrators also manage team access.</p>${field("id", "Account ID", "", "required")}<label>Role<select name="role"><option value="manager">Manager</option><option value="admin">Administrator</option><option value="customer">Customer</option></select></label>`,
+        `<h3>Assign a store role</h3><p>Use the account ID from the customer’s saved profile. Managers edit the shop and fulfil orders. Administrators also manage team access.</p>${field("id", "Account ID", "", "required")}<label>Role<select name="role"><option value="manager">Manager</option><option value="event_manager">Event manager</option><option value="admin">Administrator</option><option value="customer">Customer</option></select></label>`,
         "Save role",
       ) +
       "<h3>Assigned roles</h3>" +
