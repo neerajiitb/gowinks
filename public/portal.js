@@ -1,3 +1,4 @@
+import { createBunnyGuide } from "./bunny-guide.js";
 import { icon } from "./icons.js";
 
 const windows = [
@@ -16,10 +17,12 @@ export function moduleNav(page) {
   ).join("") + '</nav>';
 }
 
-const bunny = `<span class="portal-bunny" aria-hidden="true">
+const bunny = `<button type="button" class="portal-bunny" aria-label="Play with the Go Winks bunny">
   <span class="bun-hello">Hey, come in!</span>
-  <span class="bun-shape"><span class="bun-pose"></span><span class="bun-kiss">♥</span></span>
-</span>`;
+  <span class="bun-shape" aria-hidden="true"><span class="bun-pose"></span><span class="bun-kiss">♥</span></span>
+</button>`;
+let guide;
+export function stopPortal() { guide?.dispose(); guide = null; }
 let motionPaused = false;
 try { motionPaused = localStorage.getItem("gw.portalMotion") === "paused"; } catch {}
 
@@ -31,11 +34,11 @@ export function mountPortal(main) {
       <div class="portal-tools"><button type="button" class="portal-motion"></button>
         <button type="button" data-act="account" class="portal-account">${icon("user")} My account</button></div></div>
     <div class="portal-intro"><h1 id="portal-title">Pick your <em>kind of fun.</em></h1>
-      <p>Three windows. Tap one and follow the bunny.</p></div>
+      <p>Pick a window to explore, or tap the bunny to play.</p></div>
     <div class="portal-stage">${bunny}<div class="portal-windows">${windows.map(w =>
       `<a class="portal-choice ${w.key}" href="#${w.route}">
         <span class="portal-frame" aria-hidden="true">
-          <span class="portal-scene"><img src="/images/window-${w.key}.webp" alt=""></span>
+          <span class="portal-scene"><img src="/images/india-${w.key}.webp" alt=""></span>
           <span class="portal-pane left"><i class="sash-handle"></i></span><span class="portal-pane right"><i class="sash-handle"></i></span>
         </span>
         <span class="portal-caption"><span class="portal-name">${icon(w.icon)}${w.title}</span>
@@ -53,10 +56,12 @@ export function mountPortal(main) {
     motionToggle.innerHTML = icon(motionPaused ? "play" : "pause");
   }
   showMotionSetting();
+  guide = createBunnyGuide(portal, matchMedia("(prefers-reduced-motion: reduce)"));
   motionToggle.addEventListener("click", () => {
     motionPaused = !motionPaused;
     try { localStorage.setItem("gw.portalMotion", motionPaused ? "paused" : "playing"); } catch {}
     showMotionSetting();
+    guide.sync();
   });
   portal.addEventListener("click", event => {
     const choice = event.target.closest(".portal-choice");
@@ -66,6 +71,7 @@ export function mountPortal(main) {
     if (motionPaused || matchMedia("(prefers-reduced-motion: reduce)").matches || !pet.animate) return;
     event.preventDefault();
     const originalHash = location.hash;
+    guide.enter();
     const start = pet.getBoundingClientRect();
     const frame = choice.querySelector(".portal-frame").getBoundingClientRect();
     const x = frame.left + frame.width / 2 - (start.left + start.width / 2);

@@ -1,4 +1,4 @@
-import { moduleNav, mountPortal } from "./portal.js";
+import { moduleNav, mountPortal, stopPortal } from "./portal.js";
 import { mountConnect, stopConnect } from "./connect.js";
 import { badges, syncActivity } from "./shop-activity.js";
 import { createShopMotion } from "./motion.js";
@@ -692,6 +692,7 @@ function render() {
     page = route[1],
     main = $("#main"),
     s = state.settings;
+  if (page !== "portal") stopPortal();
   stopConnect();
   stopDarkFilms();
   if (page !== "after-dark" && darkToken()) leaveDark(api);
