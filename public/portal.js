@@ -16,7 +16,10 @@ export function moduleNav(page) {
   ).join("") + '</nav>';
 }
 
-const bunny = '<span class="portal-bunny" aria-hidden="true"><img class="bun-shape" src="/images/portal-bunny.webp" alt=""></span>';
+const bunny = `<span class="portal-bunny" aria-hidden="true">
+  <span class="bun-hello">Hey, come in!</span>
+  <span class="bun-shape"><span class="bun-pose"></span><span class="bun-kiss">♥</span></span>
+</span>`;
 let motionPaused = false;
 try { motionPaused = localStorage.getItem("gw.portalMotion") === "paused"; } catch {}
 
@@ -33,10 +36,9 @@ export function mountPortal(main) {
       `<a class="portal-choice ${w.key}" href="#${w.route}">
         <span class="portal-frame" aria-hidden="true">
           <span class="portal-scene"><img src="/images/window-${w.key}.webp" alt=""></span>
-          <span class="portal-pane left"></span><span class="portal-pane right"></span>
-          <span class="portal-seal">${icon(w.icon)}</span>
+          <span class="portal-pane left"><i class="sash-handle"></i></span><span class="portal-pane right"><i class="sash-handle"></i></span>
         </span>
-        <span class="portal-caption"><span class="portal-name">${w.title}</span>
+        <span class="portal-caption"><span class="portal-name">${icon(w.icon)}${w.title}</span>
           <span class="portal-detail">${w.detail}</span>
         </span></a>`
     ).join("")}</div></div>
@@ -79,11 +81,11 @@ export function mountPortal(main) {
       `translate(${dx}px, ${dy}px) scale(${scale}) rotate(${angle}deg)`;
     const hop = pet.animate([
       { transform: transform(startX, startY, 1, 0) },
-      { transform: transform(startX, startY + 5, .89, -14 * turn), offset: .13 },
-      { transform: transform(startX + (x - startX) * .48, Math.min(startY, y) - 53, 1.12, 36 * turn), offset: .54 },
+      { transform: transform(startX, startY + 5, .89, -14 * turn), offset: .22 },
+      { transform: transform(startX + (x - startX) * .48, Math.min(startY, y) - 53, 1.12, 36 * turn), offset: .65 },
       { transform: transform(x, y, .6, -16 * turn), opacity: 1, offset: .84 },
       { transform: transform(x, y - 4, .13, 9 * turn), opacity: 0 }
-    ], { duration: 850, easing: "ease-in-out", fill: "forwards" });
+    ], { duration: 1150, easing: "ease-in-out", fill: "forwards" });
     hop.finished.then(() => {
       if (portal.isConnected && location.hash === originalHash) location.hash = choice.hash;
     }).catch(() => {}).finally(() => {
