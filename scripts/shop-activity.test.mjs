@@ -32,7 +32,7 @@ test("activity counts distinct recent browsers and uses regional wording only wi
 });
 test("staff control support and badges while recent orders and hot sellers require real paid orders",async()=>{
   const {DB,call,staff}=fixture();
-  assert.equal((await call("manage/activity",{whatsapp:true},staff)).status,400);
+  assert.equal((await call("manage/activity",{whatsapp:true,phone:""},staff)).status,400);
   assert.equal((await call("manage/activity",{hot:false},{id:"buyer",email:"b@example.test"})).status,403);
   const prefs={whatsapp:true,phone:"+91 99999 00000",greeting:"Hello & thank you!",hotThreshold:2,hotDays:3};
   assert.equal((await call("manage/activity",prefs,staff)).status,200);
