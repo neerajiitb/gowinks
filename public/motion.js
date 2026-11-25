@@ -2,8 +2,11 @@
 export function createShopMotion(preference) {
   const active = new Set();
   let source;
+  let petals;
 
   function reset() {
+    petals?.remove();
+    petals = null;
     for (const animation of active) animation.cancel();
     active.clear();
   }
@@ -36,11 +39,39 @@ export function createShopMotion(preference) {
       source = { hash: anchor.hash, url: photo.currentSrc || photo.src, rect };
   }
 
+  function scatterPetals() {
+    if (!Element.prototype.animate || document.hidden) return;
+    const spray = document.createElement("div");
+    spray.className = "navigation-petals";
+    spray.setAttribute("aria-hidden", "true");
+    petals = spray;
+    document.body.append(spray);
+    const flights = Array.from({ length: 7 }, (_, index) => {
+      const petal = document.createElement("i");
+      spray.append(petal);
+      const x = index * 14 + 3;
+      const drift = index % 2 ? 22 : -19;
+      const turn = index % 3 * 38 - 42;
+      const flight = petal.animate([
+        { opacity: 0, transform: `translate(${x}vw, -12px) rotate(${turn}deg)` },
+        { opacity: .85, offset: .23 },
+        { opacity: 0, transform: `translate(calc(${x}vw + ${drift}px), ${85 + index % 3 * 23}px) rotate(${turn + 120}deg) rotateY(52deg)` },
+      ], { duration: 820 + index % 3 * 80, delay: index % 4 * 55, easing: "ease-out" });
+      return flight.finished.catch(() => {});
+    });
+    Promise.all(flights).then(() => {
+      spray.remove();
+      if (petals === spray) petals = null;
+    });
+  }
+
   function enter(main, hash) {
     const origin = source;
     source = null;
     reset();
     if (preference.matches) return;
+    const section = hash.split(/[/?]/)[1] || "";
+    if (["", "shop", "product", "edit", "gifting", "offers", "experiences", "connect", "wishlist"].includes(section)) scatterPetals();
     const stage = main.querySelector(".pd-main");
     const photo = stage?.querySelector("img");
     if (origin?.hash === hash && photo && (photo.currentSrc || photo.src) === origin.url) {

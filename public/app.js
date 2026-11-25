@@ -123,7 +123,7 @@ function header() {
     badge = n ? '<span class="cart-dot">' + n + "</span>" : "";
 
   document.body.classList.toggle("ad-mode", inDark());
-  document.querySelector('meta[name="theme-color"]').content = inDark() ? "#35104b" : "#300508";
+  document.querySelector('meta[name="theme-color"]').content = inDark() ? "#35104b" : "#5d385a";
   const page = hash().split("?")[0].split("/")[1];
   if (inDark()) {
     $("#header").innerHTML = moduleNav(page) + `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
@@ -132,7 +132,7 @@ function header() {
   const menu = (label, route, items, img) =>
     `<div class="nav-group">${link(route, esc(label), "nav-parent")}<div class="nav-panel"><div><strong>${esc(label)}</strong>${items}${link(route, "Shop all", "panel-all")}</div><img src="${esc(img)}" alt=""></div></div>`;
   $("#header").innerHTML =
-    moduleNav(page) + `<a class="ad-entry" href="#/after-dark">☾ After Dark <span>18+</span></a><div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
+    '<div class="destination-bar">' + moduleNav(page) + `<a class="ad-entry" href="#/after-dark">☾ After Dark <span>18+</span></a></div><div class="shop-mast">${brand()}<div class="quick-search"><form id="mast-search"><button aria-label="Submit search">${icon("search")}</button><input type="search" id="mast-query" placeholder="Search for chocolates, gifts..." aria-label="Search the boutique" autocomplete="off"></form><div class="suggestions" id="mast-results" hidden></div></div><div class="shop-tools">${toolButton("recent", "Recently viewed", "clock")}${toolButton("orders", "My orders", "order")}${toolButton("gift", "Gifting guide", "gift")}${toolButton("wishlist", "Wishlist", "heart")}${toolButton("bag", "Cart", "bag", badge)}${toolButton("account", "Profile", "user")}${toolButton("menu", "More", "more")}</div><div class="phone-actions">${toolButton("search", "Search", "search")}${toolButton("wishlist", "Wishlist", "heart")}</div></div>
  <nav class="shop-nav" aria-label="Shop categories"><div class="nav-in"><a class="nav-monogram" href="#/" aria-label="Go Winks home"><img src="/monogram.svg" alt=""></a>${menu(
    "All Products",
    "/shop",
@@ -166,7 +166,7 @@ function footer() {
       .map((c) => link("/shop/" + c.id, esc(c.name)))
       .join(
         "",
-      )}</div></div><div class="retail-credit">${brand()}<span>© Go Winks · India · INR</span></div>`;
+      )}</div></div><div class="retail-credit">${brand()}<em class="garden-signoff">For every way you love.</em><span>© Go Winks · India · INR</span></div>`;
 }
 
 function open(title, body) {
@@ -188,9 +188,19 @@ $("#dialog").addEventListener("click", (e) => {
     close();
 });
 
-function hero() {
+function gardenHero(s) {
+  return `<section class="garden-hero" aria-labelledby="garden-title">
+    <img class="garden-art" src="${esc(s.gardenImage)}" alt="" fetchpriority="high" width="1536" height="1024">
+    <div class="garden-copy"><p class="garden-label">The couples’ boutique</p>
+      <h1 id="garden-title">${esc(s.gardenHeadline)} <em>${esc(s.gardenScript)}</em></h1>
+      <p class="garden-tagline">${esc(s.gardenTagline)}</p>
+      <div class="garden-actions">${link(s.heroLink || "/gifting", "Shop the gift edit", "garden-shop")}${link("/experiences", "Explore experiences", "garden-explore")}</div>
+    </div>
+  </section>`;
+}
+function campaignFilm() {
   const s = state.settings;
-  return `<section class="film" aria-label="Go Winks romantic gift collection"><h1 class="visually-hidden">Go Winks couples’ wellness boutique</h1><a href="#${esc(s.heroLink || "/gifting")}" aria-label="Shop the romantic gift collection">${s.heroVideo ? `<video playsinline loop muted preload="auto" poster="${esc(s.heroImage)}" aria-label="Go Winks chocolates and gifts on red satin"><source src="${esc(s.heroVideo)}" type="video/mp4"></video>` : `<img src="${esc(s.heroImage)}" alt="Go Winks gift collection">`}</a>${s.heroVideo ? `<button class="film-control" data-act="film" aria-label="Pause campaign film">${icon("pause")}</button>` : ""}</section>`;
+  return `<section class="film" aria-label="Go Winks romantic gift collection"><a href="#${esc(s.heroLink || "/gifting")}" aria-label="Shop the romantic gift collection">${s.heroVideo ? `<video playsinline loop muted preload="metadata" poster="${esc(s.heroImage)}" aria-label="Go Winks chocolates and gifts on red satin"><source src="${esc(s.heroVideo)}" type="video/mp4"></video>` : `<img src="${esc(s.heroImage)}" alt="Go Winks gift collection">`}</a>${s.heroVideo ? `<button class="film-control" data-act="film" aria-label="Pause campaign film">${icon("pause")}</button>` : ""}</section>`;
 }
 const head = (sub, title, route, label) =>
   `<div class="section-head"><h2>${title}</h2>${route ? link(route, label, "text-link") : ""}</div>`;
@@ -239,9 +249,10 @@ function home() {
     ? edits.map((e) => ({ r: "/edit/" + e.id, n: e.name, i: e.image }))
     : cats().map((c) => ({ r: "/shop/" + c.id, n: c.name, i: c.image }));
   return (
-    '<div class="shop-live" data-live-note="store" hidden></div>' + hero() +
-    `<section class="category-stage"><h2>Shop By Category</h2><div class="mosaic">${tiles.join("")}</div></section>
+    '<div class="shop-live" data-live-note="store" hidden></div>' + gardenHero(s) +
+    `<section class="category-stage"><h2>Shop by category</h2><div class="mosaic">${tiles.join("")}</div></section>
  ${watchShop(s, state.products, esc)}
+ ${campaignFilm()}
  ${s.heroSlides.length ? `<section class="campaign-rail" aria-label="Featured campaigns"><div class="campaign-track">${s.heroSlides.map((h, i) => `<a class="campaign-panel" href="#/shop/${esc(h.category)}" aria-label="${esc(h.cta)}"><img src="${esc(h.image)}" alt="" loading="lazy"><div class="campaign-copy"><small>${esc(h.eyebrow)}</small><h2>${esc(h.headline)} <i>${esc(h.italic)}</i></h2><span>${esc(h.cta)}</span></div></a>`).join("")}</div><button class="deck-prev" data-deck="-1" aria-label="Previous campaign">${icon("left")}</button><button class="deck-next" data-deck="1" aria-label="Next campaign">${icon("right")}</button></section>` : ""}
  <a class="wc-home" href="#/connect"><img src="/images/winks-connect.webp" alt="" loading="lazy"><div><span>Winks Connect</span><h2>Meet your people.</h2><p>Explore social events in your city <b aria-hidden="true">↗</b></p></div></a><section class="picked" id="picked"><h2>Handpicked For You</h2><div class="pick-grid">${picks
    .slice(0, 4)

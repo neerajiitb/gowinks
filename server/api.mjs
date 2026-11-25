@@ -813,6 +813,9 @@ export async function api(req, env, u) {
     if (path === "/api/manage/settings" && method === "POST") {
       const s = await settings(db);
       for (const k of [
+        "gardenHeadline",
+        "gardenScript",
+        "gardenTagline",
         "announcement",
         "eyebrow",
         "headline",
@@ -898,6 +901,10 @@ export async function api(req, env, u) {
             items: [...new Set(e.items)],
           };
         });
+      }
+      if ("gardenImage" in b) {
+        if (!safeImage(b.gardenImage)) fail(400, "Choose a valid homepage illustration.");
+        s.gardenImage = b.gardenImage;
       }
       if ("heroImage" in b) {
         if (!safeImage(b.heroImage))
