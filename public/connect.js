@@ -19,7 +19,7 @@ export async function mountConnect(ctx) {
   const [,,page,id]=route;
   main.innerHTML='<div class="wc"><div class="wc-content" role="status">Loading Winks Connect…</div></div>';
   const root=main.firstElementChild;
-  const nav=()=>`<nav class="wc-nav" aria-label="Winks Connect"><a class="wc-word" href="#/connect">Winks <i>Connect</i></a><div><a href="#/connect/me">My tickets & profile</a>${state.user?'<a href="#/connect/host">Host desk</a>':''}${staff(state.user?.role)?'<a href="#/connect/studio">Event studio</a>':''}</div></nav>`;
+  const nav=()=>`<nav class="wc-nav" aria-label="Winks Connect"><a class="wc-word" href="#/connect"><img src="/monogram.svg" alt="">Winks <i>Connect</i></a><div><a href="#/connect/me">My tickets & profile</a>${state.user?'<a href="#/connect/host">Host desk</a>':''}${staff(state.user?.role)?'<a href="#/connect/studio">Event studio</a>':''}</div></nav>`;
   const show=html=>{if(root.isConnected) root.innerHTML=nav()+html;};
   const $=s=>root.querySelector(s);
   const note=msg=>{const node=$(".wc-feedback"); if(node) node.textContent=msg;};

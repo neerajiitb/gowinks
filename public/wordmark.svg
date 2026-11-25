@@ -1,8 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="193 811 1151 239" role="img" aria-label="Go Winks">
   <defs>
-    <linearGradient id="peach" x1="0" x2=".18" y1="0" y2="1">
-      <stop stop-color="#fff0cf"/><stop offset=".45" stop-color="#ffe0b9"/><stop offset="1" stop-color="#ffbd8d"/>
-    </linearGradient>
     <path id="letters" d="M370 855 C317 815 242 843 226 901 C201 986 283 1046 357 1011 C386 997 403 967 402 928 L334 928
       M493 902 C425 902 418 1019 495 1020 C572 1021 573 902 493 902 Z
       M615 851 L615 978 C615 1024 651 1037 676 1002 C690 978 699 947 711 924 C721 902 736 904 746 927 L776 1000 C792 1036 844 1018 844 977 L844 851
@@ -10,8 +7,7 @@
       M1100 842 L1100 1019 M1194 900 L1111 976 M1153 937 C1190 978 1208 1021 1272 1017 C1323 1014 1326 962 1282 956 C1222 948 1224 900 1278 900 L1307 900"/>
   </defs>
   <g fill="none" stroke-width="37" stroke-linecap="round" stroke-linejoin="round">
-    <use href="#letters" stroke="#d89471" transform="translate(2 3)"/>
-    <use href="#letters" stroke="url(#peach)"/>
+    <use href="#letters" stroke="#ffd6e4"/>
   </g>
-  <circle cx="897" cy="852" r="21" fill="#ffe3bd"/>
+  <circle cx="897" cy="852" r="21" fill="#ffd6e4"/>
 </svg>

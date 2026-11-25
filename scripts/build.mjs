@@ -11,6 +11,7 @@ async function collect(dir) {
     }
     const key = "/" + path.relative("public", p),
       type = {
+        ".png": "image/png",
         ".webp": "image/webp",
         ".woff2": "font/woff2",
         ".mp4": "video/mp4",
@@ -29,7 +30,7 @@ await collect("public");
 const release = execFileSync("git", ["rev-parse", "--short=12", "HEAD"], {
   encoding: "utf8",
 }).trim();
-const localUiAsset = /(["'])(\.?\/[\w./-]+\.(?:css|js|svg|ttf|woff2))\1/g;
+const localUiAsset = /(["'])(\.?\/[\w./-]+\.(?:css|js|svg|png|ttf|woff2))\1/g;
 for (const [pathname, asset] of Object.entries(files)) {
   if (!/\.(?:html|css|js)$/.test(pathname)) continue;
   const source = Buffer.from(asset[1], "base64").toString("utf8");

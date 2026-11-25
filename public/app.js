@@ -639,6 +639,7 @@ async function launchPayment(order, key) {
     amount: order.total * 100,
     currency: "INR",
     name: "Go Winks",
+    image: new URL("/go-winks-touch.png", location.origin).href,
     description: order.id,
     prefill: {
       name: order.address.name,

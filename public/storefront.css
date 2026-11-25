@@ -1605,3 +1605,9 @@ dialog[open]::backdrop {
 .module-nav a:hover,.module-nav a:focus-visible { box-shadow:0 0 0 2px #f8c8aa; }
 #main:focus { outline:none; }
 @media (max-width:350px) { .module-nav svg { display:none; } }
+
+/* Reverse the two-dot emblem on the dark navigation and footer surfaces. */
+:is(.retail-credit, .nav-monogram, .dock-emblem, .ad-brand) img:not(.gw-wordmark) {
+  object-fit: contain;
+  filter: brightness(0) invert(91%) sepia(11%) saturate(788%) hue-rotate(287deg);
+}

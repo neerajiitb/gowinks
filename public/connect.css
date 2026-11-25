@@ -42,3 +42,5 @@
 .wc .wc-form .wc-check{display:flex;align-items:center;gap:10px}.wc .wc-check input{min-height:18px;width:18px}
 .wc-mobile-links{display:none}
 @media(max-width:969px){.wc-mobile-links{display:grid;grid-template-columns:1fr 1fr}.wc-mobile-links a+a{border-left:1px solid var(--line)}}
+.wc-nav .wc-word { display: inline-flex; align-items: center; gap: .22em; }
+.wc-word img { width: 1.5em; height: 1em; object-fit: contain; margin-right: .14em; }
