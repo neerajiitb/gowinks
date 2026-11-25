@@ -1,4 +1,3 @@
-import { moduleNav, mountPortal, stopPortal } from "./portal.js";
 import { mountConnect, stopConnect } from "./connect.js";
 import { badges, syncActivity } from "./shop-activity.js";
 import { createShopMotion } from "./motion.js";
@@ -90,7 +89,7 @@ const brand = () =>
     '<img class="gw-sigil" src="/monogram.svg" alt=""><img class="gw-wordmark" src="/wordmark.svg" alt="Go Winks">',
     "gw-brand",
   );
-const hash = () => location.hash.slice(1) || "/portal",
+const hash = () => location.hash.slice(1) || "/",
   goto = (r) => {
     close();
     if (hash() === r) render();
@@ -105,6 +104,20 @@ const groupLinks = (c) =>
     .slice(0, 5)
     .map((p) => link("/product/" + p.id, esc(p.name)))
     .join("");
+const experiencePages = ["experiences", "invite", "invites", "activity-gift", "activity-checkout"];
+function moduleNav(page) {
+  const current = experiencePages.includes(page) ? "experiences" :
+    ["manage", "account"].includes(page) ? null : page === "connect" ? "connect" : "shop";
+  const destinations = [
+    ["shop", "/", "Shop", "gift"],
+    ["experiences", "/experiences", "Experiences", "spark"],
+    ["connect", "/connect", "Winks Connect", "heart"],
+  ];
+  return '<nav class="module-nav" aria-label="Go Winks destinations">' +
+    destinations.map(([id, route, label, glyph]) =>
+      `<a href="#${route}"${id === current ? ' aria-current="location"' : ""}>${icon(glyph)}${label}</a>`
+    ).join("") + '</nav>';
+}
 function header() {
   const n = bagCount(),
     badge = n ? '<span class="cart-dot">' + n + "</span>" : "";
@@ -112,11 +125,6 @@ function header() {
   document.body.classList.toggle("ad-mode", inDark());
   document.querySelector('meta[name="theme-color"]').content = inDark() ? "#35104b" : "#300508";
   const page = hash().split("?")[0].split("/")[1];
-  document.body.classList.toggle("portal-mode", page === "portal");
-  if (page === "portal") {
-    $("#header").replaceChildren();
-    return;
-  }
   if (inDark()) {
     $("#header").innerHTML = moduleNav(page) + `<nav class="ad-bar" aria-label="After Dark navigation"><a class="ad-brand" href="#/after-dark"><img src="/monogram.svg" alt="">Go Winks</a><a class="ad-normal" href="#/">☀ Normal mode</a>${darkToken() ? '<button data-act="bag">Bag (' + n + ')</button>' : ''}</nav>`;
     return;
@@ -688,11 +696,11 @@ function account() {
   return `<div class="inside">${crumbs("My account")}${intro("YOUR ACCOUNT", u.name ? "Hello, " + u.name.split(" ")[0] : "My account", u.email)}<div class="account-tabs">${link("/connect/me", "My Connect profile & tickets", "text-link")}${link("/invites", "My invitations", "text-link")}${tabs.map(([v, l]) => `<button data-account-tab="${v}" class="${v === accountTab ? "current" : ""}">${l}</button>`).join("")}${["admin", "manager"].includes(u.role) ? link("/manage", "Store management", "text-link") : ""}<button data-act="logout">Sign out</button></div><div class="account-box">${accountTab === "profile" ? `<form id="profile-form" class="stack"><h3>Profile & saved address</h3>${addressFields(u, false)}<small>Account ID: ${esc(u.id)}</small><div class="feedback" role="status"></div><button class="btn">Save profile</button></form>` : accountTab === "help" ? '<form id="help-form" class="stack"><h3>Send a message</h3><label>How can we help?<textarea required maxlength="2000" name="message"></textarea></label><div class="feedback" role="status"></div><button class="btn">Send to the Go Winks team</button></form>' : '<div id="orders" role="status">Loading orders…</div>'}</div></div>`;
 }
 function render() {
+  if (hash().split("?")[0] === "/portal") history.replaceState(history.state, "", "#/");
   const route = hash().split("?")[0].split("/"),
     page = route[1],
     main = $("#main"),
     s = state.settings;
-  if (page !== "portal") stopPortal();
   stopConnect();
   stopDarkFilms();
   if (page !== "after-dark" && darkToken()) leaveDark(api);
@@ -705,9 +713,8 @@ function render() {
   });
   else if (page === "connect") mountConnect({main,route,state,api,esc,fmt,launchPayment,
     login: () => { returnAfterAuth=hash(); auth(); }});
-  else if (page === "portal") mountPortal(main);
   else if (!page) main.innerHTML = home();
-  else if (["experiences", "invite", "invites", "activity-gift", "activity-checkout"].includes(page) && !state.experiences)
+  else if (experiencePages.includes(page) && !state.experiences)
     main.innerHTML = '<section class="xp-shell xp-empty" role="status">' +
       (loadFailed ? 'Could not load experiences. Refresh to try again.' : 'Loading GoWinks Experience…') + '</section>';
   else if (page === "activity-checkout" || page === "activity-gift") {
@@ -812,7 +819,6 @@ function render() {
       : page === "shop"
         ? category(route[2])?.name || "Shop all"
         : {
-            portal: "Choose your window",
             connect: "Winks Connect",
             "after-dark": "After Dark",
             experiences: state.experiences?.find(item => item.id === route[2])?.name || "GoWinks Experience",
@@ -824,14 +830,13 @@ function render() {
             gifting: "Gifting guide",
           }[page] || "The Couples’ Boutique") + " | Go Winks";
 }
-window.addEventListener("hashchange", (event) => {
+window.addEventListener("hashchange", () => {
   close();
   quantity = 1;
   galleryIndex = 0;
   render();
   scrollTo(0, 0);
-  const previous = new URL(event.oldURL).hash;
-  if (!previous || previous === "#/portal" || hash() === "/portal") $("#main").focus({ preventScroll: true });
+  $("#main").focus({ preventScroll: true });
   motion.enter($("#main"), location.hash);
 });
 document.addEventListener("click", async (e) => {

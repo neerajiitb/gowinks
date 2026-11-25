@@ -1596,3 +1596,12 @@ dialog[open]::backdrop {
   border-radius: 1rem;
 }
 #activity-payment legend { font-weight: 700; padding: 0 .35rem; }
+
+/* Destinations stay within a thumb's reach on each module. */
+.module-nav { display:flex; justify-content:center; align-items:center; gap:6px; padding:4px 10px; background:#370911; color:#fff0df; }
+.module-nav a { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:3px clamp(6px,2vw,13px); border:1px solid #a57072; border-radius:100px; text-decoration:none; color:inherit; white-space:nowrap; font:650 .84rem/1.15 var(--sans); }
+.module-nav a[aria-current] { color:#471021; background:#ffdfc1; border-color:#ffdfc1; }
+.module-nav svg { width:14px; height:14px; }
+.module-nav a:hover,.module-nav a:focus-visible { box-shadow:0 0 0 2px #f8c8aa; }
+#main:focus { outline:none; }
+@media (max-width:350px) { .module-nav svg { display:none; } }
